@@ -633,6 +633,130 @@ export default function VaultEditor(props: VaultEditorProps) {
       </div>
 
       <div className="card">
+        <div className="section-head">
+          <h4>{t('txt_custom_fields')}</h4>
+          <button type="button" className="btn btn-secondary small" onClick={props.onOpenFieldModal}>
+            <Plus size={14} className="btn-icon" /> {t('txt_add_field')}
+          </button>
+        </div>
+        {props.draft.customFields.length === 0 && (
+          <div className="detail-sub">{t('txt_no_custom_fields')}</div>
+        )}
+        {(() => {
+          const visible = props.draft.customFields
+            .map((field, index) => ({ field, index }))
+            .filter((entry) => entry.field.type !== 3);
+          const groups = new Map<string, typeof visible>();
+          for (const entry of visible) {
+            const g = entry.field.group || '';
+            if (!groups.has(g)) groups.set(g, []);
+            groups.get(g)!.push(entry);
+          }
+          const groupEntries = Array.from(groups.entries());
+          return groupEntries.map(([groupName, entries]) => (
+            <div key={`group-${groupName || '__ungrouped'}`}>
+              {groupName && (
+                <div className="custom-field-group-header">
+                  <span className="custom-field-group-name">{groupName}</span>
+                </div>
+              )}
+              {entries.map(({ field, index }) => (
+                <div key={`field-${index}`} className="custom-field-card">
+                  <div className="custom-field-order-actions">
+                    <button
+                      type="button"
+                      className="btn btn-secondary small field-order-btn"
+                      title={t('txt_move_up')}
+                      aria-label={t('txt_move_up')}
+                      disabled={index === 0}
+                      onClick={() => {
+                        const fields = [...props.draft.customFields];
+                        if (index <= 0) return;
+                        [fields[index - 1], fields[index]] = [fields[index], fields[index - 1]];
+                        props.onUpdateDraftCustomFields(fields);
+                      }}
+                    >
+                      <ArrowUp size={14} className="btn-icon" />
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary small field-order-btn"
+                      title={t('txt_move_down')}
+                      aria-label={t('txt_move_down')}
+                      disabled={index >= props.draft.customFields.length - 1}
+                      onClick={() => {
+                        const fields = [...props.draft.customFields];
+                        if (index >= fields.length - 1) return;
+                        [fields[index], fields[index + 1]] = [fields[index + 1], fields[index]];
+                        props.onUpdateDraftCustomFields(fields);
+                      }}
+                    >
+                      <ArrowDown size={14} className="btn-icon" />
+                    </button>
+                  </div>
+                  <div className="custom-field-main">
+                    <label className="field custom-field-label">
+                      <span>{t('txt_field_label')}</span>
+                      <input className="input" value={field.label} onInput={(e) => props.onPatchDraftCustomField(index, { label: (e.currentTarget as HTMLInputElement).value })} />
+                    </label>
+                    <label className="field custom-field-group-input">
+                      <span>{t('txt_field_group')}</span>
+                      <input className="input" value={field.group || ''} placeholder={t('txt_field_group_placeholder')} onInput={(e) => props.onPatchDraftCustomField(index, { group: (e.currentTarget as HTMLInputElement).value || undefined })} />
+                    </label>
+                    <div className="custom-field-body">
+                      <div className="custom-field-value">
+                        {field.type === 2 ? (
+                          <label className="check-line cf-check custom-field-check">
+                            <input
+                              type="checkbox"
+                              checked={toBooleanFieldValue(field.value)}
+                              onInput={(e) => props.onPatchDraftCustomField(index, { value: (e.currentTarget as HTMLInputElement).checked ? 'true' : 'false' })}
+                            />
+                            <span>{toBooleanFieldValue(field.value) ? t('txt_checked') : t('txt_unchecked')}</span>
+                          </label>
+                        ) : field.type === 4 ? (
+                          <div className="custom-field-attachment">
+                            {field._file ? (
+                              <div className="attachment-row">
+                                <span className="value-ellipsis" title={field._file.name}>{field._file.name}</span>
+                                <button
+                                  type="button"
+                                  className="btn btn-secondary small"
+                                  onClick={() => props.onPatchDraftCustomField(index, { _file: null, value: '' })}
+                                >
+                                  <X size={14} className="btn-icon" />
+                                </button>
+                              </div>
+                            ) : field.attachmentId ? (
+                              <div className="detail-sub">{t('txt_field_attachment_saved')}</div>
+                            ) : (
+                              <div className="detail-sub">{t('txt_field_attachment_hint')}</div>
+                            )}
+                          </div>
+                        ) : (
+                          <textarea
+                            className="input textarea custom-field-textarea"
+                            value={field.value}
+                            onInput={(e) => props.onPatchDraftCustomField(index, { value: (e.currentTarget as HTMLTextAreaElement).value })}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="custom-field-right-actions">
+                    <button type="button" className="btn btn-secondary small custom-field-remove" onClick={() => props.onUpdateDraftCustomFields(props.draft.customFields.filter((_, i) => i !== index))}>
+                      <X size={14} className="btn-icon" />
+                      {t('txt_remove')}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ));
+        })()}
+      </div>
+
+      <div className="card">
         <h4>{t('txt_additional_options')}</h4>
         <label className="field">
           <span>{t('txt_notes')}</span>
@@ -642,47 +766,6 @@ export default function VaultEditor(props: VaultEditorProps) {
           <input type="checkbox" checked={props.draft.reprompt} onInput={(e) => props.onUpdateDraft({ reprompt: (e.currentTarget as HTMLInputElement).checked })} />
           {t('txt_master_password_reprompt')}
         </label>
-        <div className="section-head">
-          <h4>{t('txt_custom_fields')}</h4>
-          <button type="button" className="btn btn-secondary small" onClick={props.onOpenFieldModal}>
-            <Plus size={14} className="btn-icon" /> {t('txt_add_field')}
-          </button>
-        </div>
-        {props.draft.customFields
-          .map((field, originalIndex) => ({ field, originalIndex }))
-          .filter((entry) => entry.field.type !== 3)
-          .map(({ field, originalIndex }) => (
-            <div key={`field-${originalIndex}`} className="custom-field-card">
-              <label className="field custom-field-label">
-                <span>{t('txt_field_label')}</span>
-                <input className="input" value={field.label} onInput={(e) => props.onPatchDraftCustomField(originalIndex, { label: (e.currentTarget as HTMLInputElement).value })} />
-              </label>
-              <div className="custom-field-body">
-                <div className="custom-field-value">
-                  {field.type === 2 ? (
-                    <label className="check-line cf-check custom-field-check">
-                      <input
-                        type="checkbox"
-                        checked={toBooleanFieldValue(field.value)}
-                        onInput={(e) => props.onPatchDraftCustomField(originalIndex, { value: (e.currentTarget as HTMLInputElement).checked ? 'true' : 'false' })}
-                      />
-                      <span>{toBooleanFieldValue(field.value) ? t('txt_checked') : t('txt_unchecked')}</span>
-                    </label>
-                  ) : (
-                    <textarea
-                      className="input textarea custom-field-textarea"
-                      value={field.value}
-                      onInput={(e) => props.onPatchDraftCustomField(originalIndex, { value: (e.currentTarget as HTMLTextAreaElement).value })}
-                    />
-                  )}
-                </div>
-                <button type="button" className="btn btn-secondary small custom-field-remove" onClick={() => props.onUpdateDraftCustomFields(props.draft.customFields.filter((_, i) => i !== originalIndex))}>
-                  <X size={14} className="btn-icon" />
-                  {t('txt_remove')}
-                </button>
-              </div>
-            </div>
-          ))}
       </div>
 
       <div className="detail-actions">

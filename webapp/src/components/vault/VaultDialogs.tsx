@@ -1,14 +1,15 @@
 import ConfirmDialog from '@/components/ConfirmDialog';
-import type { CustomFieldType, Folder } from '@/lib/types';
+import type { Folder } from '@/lib/types';
 import { getFieldTypeOptions, toBooleanFieldValue } from '@/components/vault/vault-page-helpers';
 import { t } from '@/lib/i18n';
 
 interface VaultDialogsProps {
   busy: boolean;
   fieldModalOpen: boolean;
-  fieldType: CustomFieldType;
+  fieldType: number;
   fieldLabel: string;
   fieldValue: string;
+  fieldGroup: string;
   archiveConfirmOpen: boolean;
   bulkArchiveOpen: boolean;
   pendingDeleteOpen: boolean;
@@ -29,9 +30,10 @@ interface VaultDialogsProps {
   deletePasskeyOpen: boolean;
   onConfirmAddField: () => void;
   onCancelFieldModal: () => void;
-  onFieldTypeChange: (value: CustomFieldType) => void;
+  onFieldTypeChange: (value: number) => void;
   onFieldLabelChange: (value: string) => void;
   onFieldValueChange: (value: string) => void;
+  onFieldGroupChange: (value: string) => void;
   onConfirmArchive: () => void;
   onCancelArchive: () => void;
   onConfirmBulkArchive: () => void;
@@ -75,7 +77,7 @@ export default function VaultDialogs(props: VaultDialogsProps) {
       >
         <label className="field">
           <span>{t('txt_field_type')}</span>
-          <select className="input" value={props.fieldType} onInput={(e) => props.onFieldTypeChange(Number((e.currentTarget as HTMLSelectElement).value) as CustomFieldType)}>
+          <select className="input" value={props.fieldType} onInput={(e) => props.onFieldTypeChange(Number((e.currentTarget as HTMLSelectElement).value))}>
             {fieldTypeOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -87,6 +89,10 @@ export default function VaultDialogs(props: VaultDialogsProps) {
           <span>{t('txt_field_label')}</span>
           <input className="input" value={props.fieldLabel} onInput={(e) => props.onFieldLabelChange((e.currentTarget as HTMLInputElement).value)} />
         </label>
+        <label className="field">
+          <span>{t('txt_field_group')}</span>
+          <input className="input" value={props.fieldGroup} placeholder={t('txt_field_group_placeholder')} onInput={(e) => props.onFieldGroupChange((e.currentTarget as HTMLInputElement).value)} />
+        </label>
         {props.fieldType === 2 ? (
           <label className="check-line">
             <input
@@ -96,6 +102,8 @@ export default function VaultDialogs(props: VaultDialogsProps) {
             />
             {t('txt_enabled')}
           </label>
+        ) : props.fieldType === 4 ? (
+          <div className="detail-sub">{t('txt_field_attachment_hint')}</div>
         ) : (
           <label className="field">
             <span>{t('txt_field_value')}</span>

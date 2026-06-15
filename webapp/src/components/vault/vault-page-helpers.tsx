@@ -147,6 +147,7 @@ export function getFieldTypeOptions(): Array<{ value: CustomFieldType; label: st
     { value: 0, label: t('txt_text') },
     { value: 1, label: t('txt_hidden') },
     { value: 2, label: t('txt_boolean') },
+    { value: 4, label: t('txt_attachment') },
   ];
 }
 
@@ -230,10 +231,11 @@ export function TypeIcon({ type }: { type: number }) {
 }
 
 export function parseFieldType(value: number | string | null | undefined): CustomFieldType {
-  if (value === 1 || value === 2 || value === 3) return value;
+  if (value === 1 || value === 2 || value === 3 || value === 4) return value;
   if (value === '1' || String(value).toLowerCase() === 'hidden') return 1;
   if (value === '2' || String(value).toLowerCase() === 'boolean') return 2;
   if (value === '3' || String(value).toLowerCase() === 'linked') return 3;
+  if (value === '4' || String(value).toLowerCase() === 'attachment') return 4;
   return 0;
 }
 
@@ -440,6 +442,9 @@ export function draftFromCipher(cipher: Cipher): VaultDraft {
     type: parseFieldType(field.type),
     label: field.decName || '',
     value: field.decValue || '',
+    group: field.decGroup || field.group || undefined,
+    linkedId: field.linkedId ?? null,
+    attachmentId: field.type === 4 ? (field.attachmentId || null) : null,
   }));
 
   return draft;

@@ -675,16 +675,26 @@ async function encryptCustomFields(
   fields: VaultDraftField[],
   enc: Uint8Array,
   mac: Uint8Array
-): Promise<Array<{ type: number; name: string | null; value: string | null }>> {
-  const out: Array<{ type: number; name: string | null; value: string | null }> = [];
+): Promise<Array<Record<string, unknown>>> {
+  const out: Array<Record<string, unknown>> = [];
   for (const field of fields || []) {
     const label = String(field.label || '').trim();
     if (!label) continue;
-    out.push({
+    const entry: Record<string, unknown> = {
       type: parseFieldType(field.type),
       name: await encryptTextValue(label, enc, mac),
       value: await encryptTextValue(String(field.value || ''), enc, mac),
-    });
+      linkedId: field.linkedId ?? null,
+    };
+    if (field.group) {
+      entry.group = await encryptTextValue(field.group, enc, mac);
+    } else {
+      entry.group = null;
+    }
+    if (field.type === 4 && field.attachmentId) {
+      entry.attachmentId = field.attachmentId;
+    }
+    out.push(entry);
   }
   return out;
 }

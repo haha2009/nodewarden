@@ -1,6 +1,6 @@
 import { hkdf } from '@/lib/crypto';
 import { t } from '@/lib/i18n';
-import type { VaultDraft } from '@/lib/types';
+import type { CustomFieldType, VaultDraft, VaultDraftField } from '@/lib/types';
 import type { ImportResultSummary } from '@/components/ImportPage';
 
 const SEND_KEY_SALT = 'bitwarden-send';
@@ -161,19 +161,22 @@ export function importCipherToDraft(cipher: Record<string, unknown>, folderId: s
 
   const customFieldsRaw = Array.isArray(cipher.fields) ? cipher.fields : [];
   draft.customFields = customFieldsRaw
-    .map((raw) => {
+    .reduce((acc: VaultDraftField[], raw) => {
       const field = (raw || {}) as Record<string, unknown>;
       const label = asText(field.name).trim();
-      if (!label) return null;
+      if (!label) return acc;
       const parsedType = Number(field.type ?? 0);
-      const fieldType = parsedType === 1 || parsedType === 2 || parsedType === 3 ? (parsedType as 1 | 2 | 3) : 0;
-      return {
+      const fieldType: CustomFieldType = parsedType === 1 || parsedType === 2 || parsedType === 3 || parsedType === 4 ? parsedType : 0;
+      acc.push({
         type: fieldType,
         label,
         value: asText(field.value),
-      };
-    })
-    .filter((x): x is VaultDraft['customFields'][number] => !!x);
+        group: asText(field.group) || undefined,
+        linkedId: field.linkedId != null ? Number(field.linkedId) : null,
+        attachmentId: fieldType === 4 ? (asText(field.attachmentId) || null) : null,
+      });
+      return acc;
+    }, []);
 
   if (type === 1) {
     const login = (cipher.login || {}) as Record<string, unknown>;

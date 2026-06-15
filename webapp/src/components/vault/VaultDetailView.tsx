@@ -337,63 +337,107 @@ export default function VaultDetailView(props: VaultDetailViewProps) {
           {(props.selectedCipher.fields || []).some((x) => parseFieldType(x.type) !== 3) && (
             <div className="card">
               <h4>{t('txt_custom_fields')}</h4>
-              {(props.selectedCipher.fields || [])
-                .filter((x) => parseFieldType(x.type) !== 3)
-                .map((field, index) => {
-                  const fieldType = parseFieldType(field.type);
-                  const fieldName = field.decName || t('txt_field');
-                  const rawValue = field.decValue || '';
-                  const isHiddenVisible = !!props.hiddenFieldVisibleMap[index];
-                  if (fieldType === 2) {
-                    const checked = toBooleanFieldValue(rawValue);
-                    return (
-                      <div key={`view-field-${index}`} className="custom-field-card">
-                        <div className="custom-field-label">{fieldName}</div>
-                        <div className="custom-field-body">
-                          <div className="custom-field-value">
-                            <label className="check-line cf-check view custom-field-check">
-                              <input type="checkbox" checked={checked} disabled />
-                              <span className="boolean-text value-ellipsis" title={checked ? t('txt_checked') : t('txt_unchecked')}>
-                                {checked ? t('txt_checked') : t('txt_unchecked')}
-                              </span>
-                            </label>
+              {(() => {
+                const visible = (props.selectedCipher.fields || [])
+                  .filter((x) => parseFieldType(x.type) !== 3);
+                const groups = new Map<string, typeof visible>();
+                for (const field of visible) {
+                  const g = field.decGroup || field.group || '';
+                  if (!groups.has(g)) groups.set(g, []);
+                  groups.get(g)!.push(field);
+                }
+                const groupEntries = Array.from(groups.entries());
+                return groupEntries.map(([groupName, groupFields]) => (
+                  <div key={`view-group-${groupName || '__ungrouped'}`}>
+                    {groupName && (
+                      <div className="custom-field-group-header">
+                        <span className="custom-field-group-name">{groupName}</span>
+                      </div>
+                    )}
+                    {groupFields.map((field, groupFieldIndex) => {
+                      const fieldType = parseFieldType(field.type);
+                      const fieldName = field.decName || t('txt_field');
+                      const rawValue = field.decValue || '';
+                      const globalIndex = (props.selectedCipher.fields || []).indexOf(field);
+                      const isHiddenVisible = !!props.hiddenFieldVisibleMap[globalIndex];
+                      if (fieldType === 2) {
+                        const checked = toBooleanFieldValue(rawValue);
+                        return (
+                          <div key={`view-field-${globalIndex}`} className="custom-field-card">
+                            <div className="custom-field-label">{fieldName}</div>
+                            <div className="custom-field-body">
+                              <div className="custom-field-value">
+                                <label className="check-line cf-check view custom-field-check">
+                                  <input type="checkbox" checked={checked} disabled />
+                                  <span className="boolean-text value-ellipsis" title={checked ? t('txt_checked') : t('txt_unchecked')}>
+                                    {checked ? t('txt_checked') : t('txt_unchecked')}
+                                  </span>
+                                </label>
+                              </div>
+                              <div className="kv-actions">
+                                <button type="button" className="btn btn-secondary small" onClick={() => copyToClipboard(rawValue)}>
+                                  <Clipboard size={14} className="btn-icon" /> {t('txt_copy')}
+                                </button>
+                              </div>
+                            </div>
                           </div>
-                          <div className="kv-actions">
+                        );
+                      }
+                      if (fieldType === 4) {
+                        const attachmentId = field.attachmentId || '';
+                        return (
+                          <div key={`view-field-${globalIndex}`} className="custom-field-card">
+                            <div className="custom-field-label" title={fieldName}>{fieldName}</div>
+                            <div className="custom-field-body">
+                              <div className="custom-field-value">
+                                <strong className="value-ellipsis" title={rawValue}>{rawValue || fieldName}</strong>
+                              </div>
+                              <div className="kv-actions">
+                                {attachmentId ? (
+                                  <button
+                                    type="button"
+                                    className="btn btn-secondary small"
+                                    disabled={props.downloadingAttachmentKey === `${props.selectedCipher.id}:${attachmentId}`}
+                                    onClick={() => props.onDownloadAttachment(props.selectedCipher, attachmentId)}
+                                  >
+                                    <Download size={14} className="btn-icon" /> {t('txt_download')}
+                                  </button>
+                                ) : null}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div key={`view-field-${globalIndex}`} className="custom-field-card">
+                          <div className="custom-field-label" title={fieldName}>{fieldName}</div>
+                          <div className="custom-field-body">
+                            <div className="custom-field-value">
+                              <strong
+                                className={fieldType === 1 && !isHiddenVisible ? 'value-ellipsis' : 'custom-field-display'}
+                                title={fieldType === 1 && !isHiddenVisible ? '' : rawValue}
+                              >
+                                {fieldType === 1 && !isHiddenVisible ? maskSecret(rawValue) : rawValue}
+                              </strong>
+                            </div>
+                            <div className="kv-actions">
+                            {fieldType === 1 && (
+                              <button type="button" className="btn btn-secondary small" onClick={() => props.onToggleHiddenField(globalIndex)}>
+                                {isHiddenVisible ? <EyeOff size={14} className="btn-icon" /> : <Eye size={14} className="btn-icon" />}
+                                {isHiddenVisible ? t('txt_hide') : t('txt_reveal')}
+                              </button>
+                            )}
                             <button type="button" className="btn btn-secondary small" onClick={() => copyToClipboard(rawValue)}>
                               <Clipboard size={14} className="btn-icon" /> {t('txt_copy')}
                             </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  }
-                  return (
-                    <div key={`view-field-${index}`} className="custom-field-card">
-                      <div className="custom-field-label" title={fieldName}>{fieldName}</div>
-                      <div className="custom-field-body">
-                        <div className="custom-field-value">
-                          <strong
-                            className={fieldType === 1 && !isHiddenVisible ? 'value-ellipsis' : 'custom-field-display'}
-                            title={fieldType === 1 && !isHiddenVisible ? '' : rawValue}
-                          >
-                            {fieldType === 1 && !isHiddenVisible ? maskSecret(rawValue) : rawValue}
-                          </strong>
-                        </div>
-                        <div className="kv-actions">
-                        {fieldType === 1 && (
-                          <button type="button" className="btn btn-secondary small" onClick={() => props.onToggleHiddenField(index)}>
-                            {isHiddenVisible ? <EyeOff size={14} className="btn-icon" /> : <Eye size={14} className="btn-icon" />}
-                            {isHiddenVisible ? t('txt_hide') : t('txt_reveal')}
-                          </button>
-                        )}
-                        <button type="button" className="btn btn-secondary small" onClick={() => copyToClipboard(rawValue)}>
-                          <Clipboard size={14} className="btn-icon" /> {t('txt_copy')}
-                        </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                      );
+                    })}
+                  </div>
+                ));
+              })()}
             </div>
           )}
 

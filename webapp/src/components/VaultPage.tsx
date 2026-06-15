@@ -91,6 +91,7 @@ export default function VaultPage(props: VaultPageProps) {
   const [fieldType, setFieldType] = useState<CustomFieldType>(0);
   const [fieldLabel, setFieldLabel] = useState('');
   const [fieldValue, setFieldValue] = useState('');
+  const [fieldGroup, setFieldGroup] = useState('');
   const [localError, setLocalError] = useState('');
   const [pendingArchive, setPendingArchive] = useState<Cipher | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Cipher | null>(null);
@@ -1222,6 +1223,7 @@ const folderName = useCallback((id: string | null | undefined): string => {
         fieldType={fieldType}
         fieldLabel={fieldLabel}
         fieldValue={fieldValue}
+        fieldGroup={fieldGroup}
         archiveConfirmOpen={!!pendingArchive}
         bulkArchiveOpen={bulkArchiveOpen}
         pendingDeleteOpen={!!pendingDelete}
@@ -1246,18 +1248,23 @@ const folderName = useCallback((id: string | null | undefined): string => {
             setLocalError(t('txt_field_label_is_required'));
             return;
           }
+          const trimmedGroup = fieldGroup.trim();
           updateDraftCustomFields([
             ...draft.customFields,
             {
               type: fieldType,
               label: fieldLabel.trim(),
               value: fieldType === 2 ? (fieldValue === 'true' ? 'true' : 'false') : fieldValue,
+              group: trimmedGroup || undefined,
+              linkedId: null,
+              attachmentId: null,
             },
           ]);
           setFieldModalOpen(false);
           setFieldType(0);
           setFieldLabel('');
           setFieldValue('');
+          setFieldGroup('');
           setLocalError('');
         }}
         onCancelFieldModal={() => {
@@ -1266,9 +1273,10 @@ const folderName = useCallback((id: string | null | undefined): string => {
           setFieldLabel('');
           setFieldValue('');
         }}
-        onFieldTypeChange={setFieldType}
+        onFieldTypeChange={(v) => setFieldType(v as CustomFieldType)}
         onFieldLabelChange={setFieldLabel}
         onFieldValueChange={setFieldValue}
+        onFieldGroupChange={setFieldGroup}
         onConfirmArchive={() => void confirmArchiveSelected()}
         onCancelArchive={() => setPendingArchive(null)}
         onConfirmBulkArchive={() => void confirmBulkArchive()}

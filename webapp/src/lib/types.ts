@@ -146,8 +146,11 @@ export interface CipherField {
   name?: string | null;
   value?: string | null;
   linkedId?: number | null;
+  group?: string | null;
+  attachmentId?: string | null;
   decName?: string;
   decValue?: string;
+  decGroup?: string;
 }
 
 export interface CipherPasswordHistoryEntry {
@@ -227,12 +230,17 @@ export interface SendDraft {
   disabled: boolean;
 }
 
-export type CustomFieldType = 0 | 1 | 2 | 3;
+export type CustomFieldType = 0 | 1 | 2 | 3 | 4;
 
 export interface VaultDraftField {
   type: CustomFieldType;
   label: string;
   value: string;
+  group?: string;
+  linkedId?: number | null;
+  attachmentId?: string | null;
+  /** Temp file selected but not uploaded yet (attachment type fields) */
+  _file?: File | null;
 }
 
 export interface VaultDraft {

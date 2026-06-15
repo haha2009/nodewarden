@@ -180,6 +180,9 @@ export interface CipherField {
   value: string | null;
   type: number;
   linkedId: number | null;
+  group?: string | null;
+  attachmentId?: string | null;
+  [key: string]: any;
 }
 
 export interface PasswordHistory {

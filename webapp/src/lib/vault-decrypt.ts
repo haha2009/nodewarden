@@ -206,6 +206,7 @@ export async function decryptVaultCore(args: DecryptVaultCoreArgs): Promise<Decr
             ...field,
             decName: await decryptCipherField(field.name || '', itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
             decValue: await decryptCipherField(field.value || '', itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
+            decGroup: field.group ? await decryptCipherField(field.group, itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey) : undefined,
           }))
         );
       }

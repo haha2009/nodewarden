@@ -214,13 +214,18 @@ function optimisticCipherFromDraft(draft: VaultDraft, current?: Cipher | null): 
     next.sshKey = null;
   }
 
-  next.fields = draft.customFields.map((field) => ({
-    type: field.type,
-    name: field.label,
-    value: field.value,
-    decName: field.label,
-    decValue: field.value,
-  }));
+  next.fields = draft.customFields.map((field) => {
+    const f: Record<string, any> = {
+      type: field.type,
+      name: field.label,
+      value: field.value,
+      decName: field.label,
+      decValue: field.value,
+    };
+    if (field.group) f.group = field.group;
+    if (field.type === 4 && field.attachmentId) f.attachmentId = field.attachmentId;
+    return f;
+  });
 
   return next;
 }
