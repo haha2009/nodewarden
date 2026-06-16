@@ -187,34 +187,16 @@ input[type='file'].input::file-selector-button:hover {
 
 .btn-primary {
   @apply text-white;
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  background: #2563eb;
   border: 1px solid rgba(37, 99, 235, 0.4);
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  position: relative;
-  overflow: hidden;
 }
 
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
-  opacity: 0;
-  transition: opacity var(--dur-fast) var(--ease-smooth);
-}
-
-.btn-primary:hover {
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  transform: translateY(-2px);
-}
-
-.btn-primary:hover::before {
-  opacity: 1;
+.btn-primary:hover:not(:disabled) {
+  background: #1d4ed8;
 }
 
 .btn-primary:active:not(:disabled) {
-  transform: translateY(0) scale(0.98);
+  background: #1e40af;
 }
 
 .btn-secondary {

@@ -111,6 +111,71 @@ export function CardBrandIcon({ brand }: { brand?: string | null }) {
   );
 }
 
+export function PlatformIcon({ platform }: { platform?: string }) {
+  const label = platform || '';
+  const key = label.toLowerCase().replace(/[^a-z0-9]+/g, '') || 'generic';
+  return (
+    <span className={`platform-icon platform-${key}`} aria-label={label} title={label}>
+      {key === 'google' && (
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+      )}
+      {key === 'apple' && (
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+          <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+        </svg>
+      )}
+      {key === 'facebook' && (
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="#1877F2">
+          <path d="M24 12.073c0-6.627-5.373-12-12-12S0 5.446 0 12.073c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+        </svg>
+      )}
+      {key === 'microsoft' && (
+        <svg viewBox="0 0 24 24" width="18" height="18">
+          <rect x="2" y="2" width="9.5" height="9.5" fill="#F25022"/>
+          <rect x="12.5" y="2" width="9.5" height="9.5" fill="#7FBA00"/>
+          <rect x="2" y="12.5" width="9.5" height="9.5" fill="#00A4EF"/>
+          <rect x="12.5" y="12.5" width="9.5" height="9.5" fill="#FFB900"/>
+        </svg>
+      )}
+      {key === 'twitter' && (
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="#000">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+        </svg>
+      )}
+      {key === 'github' && (
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+      )}
+      {key === 'wechat' && (
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="#07C160">
+          <path d="M8.5 2C4.36 2 1 4.87 1 8.44c0 2.11 1.03 3.99 2.68 5.28l-.68 2.1 2.48-1.37c.93.27 1.91.42 2.92.42l.43-.01A6.43 6.43 0 0 1 8.5 12.5C8.5 7.81 12.08 4 16.5 4L16 3.95C14.22 2.7 11.97 2 9.5 2c-.34 0-.67.02-1 .05m4.5 1C21.17 3 26 7.48 26 12.83c0 3.02-1.69 5.72-4.31 7.46l.89 2.71-3.18-1.76c-1.09.3-2.24.47-3.44.47l-.57-.01A6.98 6.98 0 0 0 18 16.5c0-4.14-3.58-7.5-8-7.5z" transform="scale(0.85) translate(1, 1)"/>
+        </svg>
+      )}
+      {key === 'alipay' && (
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="#1677FF">
+          <path d="M21.43 17.29c-1.9-1.03-8.11-4.14-10.72-5.79A7.35 7.35 0 0 0 12.88 10c-2.16 0-5.28 1.21-7.16 2.4a8.24 8.24 0 0 0-1.95 1.54c.1.43.28.83.53 1.18A7.08 7.08 0 0 0 7.33 17c1.78.7 3.68.89 5.55.55a6.56 6.56 0 0 0 2.31-.86c.28-.16.54-.34.79-.53l3.65 1.6c-.18.24-.38.47-.6.68a8.45 8.45 0 0 1-5.29 2.24c-2.5.15-4.93-.49-7.07-1.63-1.37-.73-2.5-1.72-3.46-2.88l-.01.01C2.5 14.85 1.5 12.6 1.24 10.3c-.08-.69-.03-1.39.07-2.06C2.16 4.04 6.1 1.55 11.5 1.55c2.2 0 4.55.55 6.42 1.88 1.99 1.4 3.16 3.57 3.37 5.96.11 1.14.03 2.25-.24 3.34-.03.13-.1.38-.1.38l-8.22-3.53v.12c1.29 1.01 2.84 1.71 4.37 2.34 1.64.67 4.16 1.8 6.15 2.54.2.08.4.12.56.1.39-.08.75-.19 1.1-.15.68.08 1.19.5 1.19 1.14 0 .18-.04.36-.11.52-.26.6-.6 1.12-1.03 1.58-.9.95-1.98 1.6-3.14 2.04l.01.01Zm-5.44-8.84-1.73 3.53 3.24 1.39c.01-.76.02-1.51.08-2.26.06-.85.24-1.68.55-2.45l-2.14-.21Z"/>
+        </svg>
+      )}
+      {key === 'amazon' && (
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="#FF9900">
+          <path d="M13.86 14.34c1.1-.42 2.38-.85 3.29-1.17.91-.32 1.58-.46 1.58-.46s-.46.37-1.18.73c-1.62.82-3.95 1.65-5.95 1.65-2.47 0-4.7-1.18-6.21-2.93-.42-.49-.07-.28.3-.1.95.5 2.12.95 3.37 1.19 1.33.26 2.63.36 3.85.28 1.15-.08 2.16-.31 2.95-.64l-.05-.03c1.1-.46 2.67-1.64 2.93-2.33.04-.1.03-.13-.02-.1-.83.57-2.76 1.64-4.06 1.95-1.46.34-2.82.47-4.46.45-1.68-.02-3.3-.39-4.49-1.1-1.02-.61-1.78-1.49-2.3-2.56-.54-1.1-.86-2.52-.86-4.15 0-1.66.33-3.16.86-4.26.52-1.07 1.29-1.96 2.3-2.57C8.45.63 10.07.26 11.75.28c1.46.01 2.81.16 4.04.42 1.08.23 2.14.56 3.16.98.17.07.32.14.47.21V.87h1.83v8.77c0 1.27-.23 2.37-.68 3.3-.45.93-1.08 1.7-1.88 2.31-.81.61-1.77 1.07-2.88 1.38-1.11.31-2.31.47-3.6.47-1.43 0-2.73-.24-3.9-.73-1.13-.47-2.08-1.13-2.86-1.98-.08-.09-.13-.16-.15-.21l.06-.06c.02-.02.05-.01.08 0 .93.49 1.99.88 3.16 1.17 1.2.3 2.46.45 3.76.45.86 0 1.8-.08 2.79-.26zM8.79 7.99c.02.37.11.71.27 1.01.16.3.38.56.65.78.51.41 1.12.62 1.83.62.79 0 1.45-.28 1.98-.83.53-.55.9-1.33 1.1-2.34.2-1.01.3-2.2.3-3.59v-.18c-.04-.27-.11-.52-.22-.73-.11-.21-.25-.38-.43-.51-.33-.24-.72-.36-1.17-.36-.79 0-1.44.28-1.96.84-.52.56-.88 1.34-1.07 2.35-.19 1.01-.28 2.19-.28 3.56z"/>
+        </svg>
+      )}
+      {key !== 'google' && key !== 'apple' && key !== 'facebook' && key !== 'microsoft' && key !== 'twitter' && key !== 'github' && key !== 'wechat' && key !== 'alipay' && key !== 'amazon' && (
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="#64748b">
+          <path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/>
+        </svg>
+      )}
+    </span>
+  );
+}
+
 export function getCreateTypeOptions(): TypeOption[] {
   return [
     { type: 1, label: t('txt_login') },
@@ -246,6 +311,110 @@ export function toBooleanFieldValue(raw: string): boolean {
 
 export { firstCipherUri, hostFromUri, websiteIconUrl } from '@/lib/website-utils';
 
+const DOMAIN_TO_NAME: Record<string, string> = {
+  'google.com': 'Google',
+  'mail.google.com': 'Gmail',
+  'drive.google.com': 'Google Drive',
+  'docs.google.com': 'Google Docs',
+  'youtube.com': 'YouTube',
+  'github.com': 'GitHub',
+  'gitlab.com': 'GitLab',
+  'bitbucket.org': 'Bitbucket',
+  'facebook.com': 'Facebook',
+  'instagram.com': 'Instagram',
+  'twitter.com': 'Twitter',
+  'x.com': 'X / Twitter',
+  'linkedin.com': 'LinkedIn',
+  'reddit.com': 'Reddit',
+  'whatsapp.com': 'WhatsApp',
+  'telegram.org': 'Telegram',
+  'discord.com': 'Discord',
+  'slack.com': 'Slack',
+  'microsoft.com': 'Microsoft',
+  'outlook.com': 'Outlook',
+  'live.com': 'Microsoft Live',
+  'office.com': 'Microsoft 365',
+  'azure.com': 'Microsoft Azure',
+  'apple.com': 'Apple',
+  'icloud.com': 'iCloud',
+  'amazon.com': 'Amazon',
+  'amazon.co.jp': 'Amazon Japan',
+  'aws.amazon.com': 'AWS',
+  'netflix.com': 'Netflix',
+  'spotify.com': 'Spotify',
+  'twitch.tv': 'Twitch',
+  'dropbox.com': 'Dropbox',
+  'notion.so': 'Notion',
+  'figma.com': 'Figma',
+  'vercel.com': 'Vercel',
+  'heroku.com': 'Heroku',
+  'digitalocean.com': 'DigitalOcean',
+  'cloudflare.com': 'Cloudflare',
+  'stackoverflow.com': 'Stack Overflow',
+  'medium.com': 'Medium',
+  'wordpress.com': 'WordPress',
+  'wikipedia.org': 'Wikipedia',
+  'baidu.com': '百度',
+  'zhihu.com': '知乎',
+  'bilibili.com': 'Bilibili',
+  'weibo.com': '微博',
+  'douyin.com': '抖音',
+  'taobao.com': '淘宝',
+  'tmall.com': '天猫',
+  'jd.com': '京东',
+  'meituan.com': '美团',
+  'dianping.com': '大众点评',
+  'alipay.com': '支付宝',
+  'tencent.com': '腾讯',
+  'qq.com': 'QQ',
+  'weixin.qq.com': '微信',
+  '163.com': '网易',
+  'sina.com.cn': '新浪',
+  'xiaomi.com': '小米',
+  'bytedance.com': '字节跳动',
+  'paypal.com': 'PayPal',
+  'stripe.com': 'Stripe',
+  'atlassian.com': 'Atlassian',
+  'jira.com': 'Jira',
+  'notion.com': 'Notion',
+  'canva.com': 'Canva',
+  'zoom.us': 'Zoom',
+  'teams.microsoft.com': 'Microsoft Teams',
+  'chat.openai.com': 'ChatGPT',
+  'claude.ai': 'Claude',
+};
+
+function stripWww(host: string): string {
+  return host.replace(/^www\./, '');
+}
+
+function domainToReadableName(host: string): string {
+  const stripped = stripWww(host);
+  // Check exact match first
+  if (DOMAIN_TO_NAME[stripped]) return DOMAIN_TO_NAME[stripped];
+  // Check parent domain
+  const parts = stripped.split('.');
+  if (parts.length >= 2) {
+    const parent = parts.slice(parts.length - 2).join('.');
+    if (DOMAIN_TO_NAME[parent]) return DOMAIN_TO_NAME[parent];
+  }
+  // Fallback: capitalize the first part of the domain
+  const namePart = parts[0] || stripped;
+  return namePart.charAt(0).toUpperCase() + namePart.slice(1);
+}
+
+export function suggestNameFromUrl(url: string): string | null {
+  if (!url.trim()) return null;
+  try {
+    const normalized = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    const hostname = new URL(normalized).hostname;
+    if (!hostname) return null;
+    return domainToReadableName(hostname);
+  } catch {
+    return null;
+  }
+}
+
 export function createEmptyLoginUri(): VaultDraftLoginUri {
   return { uri: '', match: null, originalUri: '', extra: {} };
 }
@@ -341,6 +510,10 @@ export function createEmptyDraft(type: number): VaultDraft {
     favorite: false,
     name: '',
     folderId: '',
+    customIcon: '',
+    loginType: 'password',
+    thirdPartyPlatform: '',
+    thirdPartyAccount: '',
     notes: '',
     reprompt: false,
     loginUsername: '',
@@ -403,6 +576,10 @@ export function draftFromCipher(cipher: Cipher): VaultDraft {
     draft.loginFido2Credentials = Array.isArray(cipher.login.fido2Credentials)
       ? cipher.login.fido2Credentials.map((credential) => ({ ...credential }))
       : [];
+    draft.customIcon = cipher.decIcon || '';
+    draft.loginType = (cipher.login as Record<string, string>).decLoginType === 'third_party' ? 'third_party' : 'password';
+    draft.thirdPartyPlatform = (cipher.login as Record<string, string>).decThirdPartyPlatform || '';
+    draft.thirdPartyAccount = (cipher.login as Record<string, string>).decThirdPartyAccount || '';
     if (!draft.loginUris.length) draft.loginUris = [createEmptyLoginUri()];
   }
   if (cipher.card) {
@@ -529,4 +706,27 @@ export function openUri(raw: string): void {
   if (!value) return;
   const url = /^https?:\/\//i.test(value) ? value : `https://${value}`;
   window.open(url, '_blank', 'noopener');
+}
+
+export async function resizeImageToIcon(file: File, maxSize: number): Promise<string> {
+  const img = await createImageBitmap(file);
+  const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+  const w = Math.round(img.width * scale);
+  const h = Math.round(img.height * scale);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    img.close();
+    throw new Error('Canvas context unavailable');
+  }
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0, w, h);
+  img.close();
+
+  return canvas.toDataURL('image/png', 0.92);
 }

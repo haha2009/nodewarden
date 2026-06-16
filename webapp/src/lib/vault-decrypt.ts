@@ -126,6 +126,7 @@ export async function decryptVaultCore(args: DecryptVaultCoreArgs): Promise<Decr
         ...cipher,
         decName: await decryptCipherField(cipher.name || '', itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
         decNotes: await decryptCipherField(cipher.notes || '', itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
+        decIcon: await decryptCipherField(cipher.icon || '', itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
       };
 
       if (cipher.login) {
@@ -134,6 +135,9 @@ export async function decryptVaultCore(args: DecryptVaultCoreArgs): Promise<Decr
           decUsername: await decryptCipherField(cipher.login.username || '', itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
           decPassword: await decryptCipherField(cipher.login.password || '', itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
           decTotp: await decryptCipherField(cipher.login.totp || '', itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
+          decLoginType: await decryptCipherField((cipher.login as Record<string, string | null>).loginType || '', itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
+          decThirdPartyPlatform: await decryptCipherField((cipher.login as Record<string, string | null>).thirdPartyPlatform || '', itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
+          decThirdPartyAccount: await decryptCipherField((cipher.login as Record<string, string | null>).thirdPartyAccount || '', itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
           uris: await Promise.all(
             (cipher.login.uris || []).map(async (uri) => ({
               ...uri,

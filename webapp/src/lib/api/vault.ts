@@ -532,6 +532,9 @@ function draftFromDecryptedCipher(cipher: Cipher): VaultDraft {
     loginPassword: '',
     loginTotp: '',
     loginUris: [{ uri: '', match: null, originalUri: '', extra: {} }],
+    loginType: 'password',
+    thirdPartyPlatform: '',
+    thirdPartyAccount: '',
     loginFido2Credentials: [],
     cardholderName: '',
     cardNumber: '',
@@ -571,10 +574,15 @@ function draftFromDecryptedCipher(cipher: Cipher): VaultDraft {
     }))
     .filter((field) => field.label);
 
+  draft.customIcon = cipher.decIcon || '';
+
   if (type === 1 && cipher.login) {
     draft.loginUsername = plainCipherValue(cipher.login.decUsername, cipher.login.username);
     draft.loginPassword = plainCipherValue(cipher.login.decPassword, cipher.login.password);
     draft.loginTotp = plainCipherValue(cipher.login.decTotp, cipher.login.totp);
+    draft.loginType = (cipher.login as Record<string, string>).decLoginType === 'third_party' ? 'third_party' : 'password';
+    draft.thirdPartyPlatform = (cipher.login as Record<string, string>).decThirdPartyPlatform || '';
+    draft.thirdPartyAccount = (cipher.login as Record<string, string>).decThirdPartyAccount || '';
     draft.loginFido2Credentials = Array.isArray(cipher.login.fido2Credentials)
       ? cipher.login.fido2Credentials.filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
       : [];
@@ -1130,6 +1138,7 @@ async function buildCipherPayload(
     reprompt: draft.reprompt ? 1 : 0,
     name: await encryptTextValue(draft.name, keys.enc, keys.mac),
     notes: await encryptTextValue(draft.notes, keys.enc, keys.mac),
+    icon: draft.customIcon ? await encryptTextValue(draft.customIcon, keys.enc, keys.mac) : null,
     login: null,
     card: null,
     identity: null,
@@ -1162,6 +1171,9 @@ async function buildCipherPayload(
       username: await encryptTextValue(draft.loginUsername, keys.enc, keys.mac),
       password: await encryptTextValue(draft.loginPassword, keys.enc, keys.mac),
       totp: await encryptTextValue(draft.loginTotp, keys.enc, keys.mac),
+      loginType: await encryptTextValue(draft.loginType, keys.enc, keys.mac),
+      thirdPartyPlatform: await encryptTextValue(draft.thirdPartyPlatform, keys.enc, keys.mac),
+      thirdPartyAccount: await encryptTextValue(draft.thirdPartyAccount, keys.enc, keys.mac),
       passwordRevisionDate: passwordChanged ? now : existingLogin.passwordRevisionDate ?? null,
       fido2Credentials: await normalizeFido2Credentials(existingFido2, keys.enc, keys.mac),
       uris: await encryptUris(draft.loginUris || [], keys.enc, keys.mac),

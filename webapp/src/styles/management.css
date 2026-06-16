@@ -1317,7 +1317,7 @@
 }
 
 .detail-actions {
-  @apply my-3 flex items-center justify-between;
+  @apply my-3 flex items-center justify-end gap-2;
 }
 
 .detail-delete-btn {

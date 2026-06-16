@@ -74,6 +74,9 @@ export interface CipherLogin {
   decUsername?: string;
   decPassword?: string;
   decTotp?: string;
+  decLoginType?: string;
+  decThirdPartyPlatform?: string;
+  decThirdPartyAccount?: string;
   [key: string]: unknown;
 }
 
@@ -168,6 +171,7 @@ export interface Cipher {
   name?: string | null;
   notes?: string | null;
   key?: string | null;
+  icon?: string | null;
   creationDate?: string;
   revisionDate?: string;
   deletedDate?: string | null;
@@ -182,6 +186,7 @@ export interface Cipher {
   fields?: CipherField[] | null;
   decName?: string;
   decNotes?: string;
+  decIcon?: string;
 }
 
 export interface SendTextData {
@@ -251,9 +256,13 @@ export interface VaultDraft {
   folderId: string;
   notes: string;
   reprompt: boolean;
+  customIcon: string;
+  loginType: 'password' | 'third_party';
   loginUsername: string;
   loginPassword: string;
   loginTotp: string;
+  thirdPartyPlatform: string;
+  thirdPartyAccount: string;
   loginUris: VaultDraftLoginUri[];
   loginFido2Credentials: Array<Record<string, unknown>>;
   cardholderName: string;

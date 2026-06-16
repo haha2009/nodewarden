@@ -127,7 +127,13 @@ export default function VaultDetailView(props: VaultDetailViewProps) {
           <div className="card">
             <div className="detail-title-row">
               <span className="detail-title-icon" aria-hidden="true">
-                <VaultListIcon cipher={props.selectedCipher} />
+                {props.selectedCipher.decIcon ? (
+                  <span className="list-icon-stack">
+                    <img className="list-icon loaded" src={props.selectedCipher.decIcon} alt="" />
+                  </span>
+                ) : (
+                  <VaultListIcon cipher={props.selectedCipher} />
+                )}
               </span>
               <div className="detail-title-main">
                 <h3 className="detail-title">{props.selectedCipher.decName || t('txt_no_name')}</h3>
@@ -143,8 +149,30 @@ export default function VaultDetailView(props: VaultDetailViewProps) {
           {props.selectedCipher.login && (
             <div className="card">
               <h4>{t('txt_login_credentials')}</h4>
-              <div className="kv-row">
-                <span className="kv-label">{t('txt_username')}</span>
+              {(props.selectedCipher.login as Record<string, string>).decLoginType === 'third_party' ? (
+                <>
+                  <div className="kv-row">
+                    <span className="kv-label">{t('txt_third_party_login')}</span>
+                    <div className="kv-main">
+                      <strong className="value-ellipsis">{(props.selectedCipher.login as Record<string, string>).decThirdPartyPlatform || ''}</strong>
+                    </div>
+                  </div>
+                  <div className="kv-row">
+                    <span className="kv-label">{t('txt_third_party_account')}</span>
+                    <div className="kv-main">
+                      <strong className="value-ellipsis">{(props.selectedCipher.login as Record<string, string>).decThirdPartyAccount || ''}</strong>
+                    </div>
+                    <div className="kv-actions">
+                      <button type="button" className="btn btn-secondary small" onClick={() => copyToClipboard((props.selectedCipher.login as Record<string, string>).decThirdPartyAccount || '')}>
+                        <Clipboard size={14} className="btn-icon" /> {t('txt_copy')}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="kv-row">
+                    <span className="kv-label">{t('txt_username')}</span>
                 <div className="kv-main">
                   <strong className="value-ellipsis" title={props.selectedCipher.login.decUsername || ''}>{props.selectedCipher.login.decUsername || ''}</strong>
                 </div>
@@ -216,6 +244,8 @@ export default function VaultDetailView(props: VaultDetailViewProps) {
                   </div>
                   <div className="kv-actions" />
                 </div>
+              )}
+              </>
               )}
             </div>
           )}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
-import { Globe } from 'lucide-preact';
+import { Camera, Globe } from 'lucide-preact';
 import type { Cipher } from '@/lib/types';
 import {
   beginWebsiteIconLoad,
@@ -18,6 +18,10 @@ const SHOULD_LOAD_DEMO_BRAND_ICONS = __NODEWARDEN_DEMO__;
 interface WebsiteIconProps {
   cipher: Cipher;
   fallback?: ComponentChildren;
+  customIcon?: string;
+  editable?: boolean;
+  onUpload?: () => void;
+  onClick?: () => void;
 }
 
 export default function WebsiteIcon(props: WebsiteIconProps) {
@@ -29,6 +33,8 @@ export default function WebsiteIcon(props: WebsiteIconProps) {
   const [imageUrl, setImageUrl] = useState(() => (host ? getWebsiteIconImageUrl(host) : ''));
   const [networkStatus, setNetworkStatus] = useState(getCurrentNetworkStatus);
   const demoIconUrl = SHOULD_LOAD_DEMO_BRAND_ICONS && host ? demoBrandIconUrl(host) : '';
+
+  const hasCustomIcon = !!props.customIcon;
 
   useEffect(() => subscribeNetworkStatus(setNetworkStatus), []);
 
@@ -86,28 +92,78 @@ export default function WebsiteIcon(props: WebsiteIconProps) {
     beginWebsiteIconLoad(host, src);
   }, [demoIconUrl, host, networkStatus, src, shouldLoad, status]);
 
+  const renderImage = (imgSrc: string, className: string) => (
+    <img className={className} src={imgSrc} alt="" loading="lazy" decoding="async" />
+  );
+
+  const handleClick = () => {
+    if (props.editable && props.onUpload) {
+      props.onUpload();
+    } else if (props.onClick) {
+      props.onClick();
+    }
+  };
+
+  // Custom icon takes precedence
+  if (hasCustomIcon) {
+    return (
+      <span
+        className={`list-icon-stack ${props.editable ? 'icon-editable' : ''}`}
+        ref={nodeRef}
+        onClick={handleClick}
+        role={props.editable ? 'button' : undefined}
+        tabIndex={props.editable ? 0 : undefined}
+        onKeyDown={props.editable ? (e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(); } : undefined}
+      >
+        {renderImage(props.customIcon!, 'list-icon loaded')}
+        {props.editable && <span className="icon-edit-badge"><Camera size={12} /></span>}
+      </span>
+    );
+  }
+
   if (demoIconUrl) {
     return (
-      <span className="list-icon-stack" ref={nodeRef}>
-        <img
-          className="list-icon loaded"
-          src={demoIconUrl}
-          alt=""
-          loading="lazy"
-          decoding="async"
-        />
+      <span
+        className={`list-icon-stack ${props.editable ? 'icon-editable' : ''}`}
+        ref={nodeRef}
+        onClick={handleClick}
+        role={props.editable ? 'button' : undefined}
+        tabIndex={props.editable ? 0 : undefined}
+        onKeyDown={props.editable ? (e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(); } : undefined}
+      >
+        {renderImage(demoIconUrl, 'list-icon loaded')}
+        {props.editable && <span className="icon-edit-badge"><Camera size={12} /></span>}
       </span>
     );
   }
 
   if (!host || status === 'error') {
-    return <span className="list-icon-fallback">{props.fallback ?? <Globe size={18} />}</span>;
+    return (
+      <span
+        className={`list-icon-stack ${props.editable ? 'icon-editable' : ''}`}
+        ref={nodeRef}
+        onClick={handleClick}
+        role={props.editable ? 'button' : undefined}
+        tabIndex={props.editable ? 0 : undefined}
+        onKeyDown={props.editable ? (e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(); } : undefined}
+      >
+        <span className="list-icon-fallback">{props.fallback ?? <Globe size={18} />}</span>
+        {props.editable && <span className="icon-edit-badge"><Camera size={12} /></span>}
+      </span>
+    );
   }
 
   const shouldRenderIconImage = !!imageUrl && status === 'loaded';
 
   return (
-    <span className="list-icon-stack" ref={nodeRef}>
+    <span
+      className={`list-icon-stack ${props.editable ? 'icon-editable' : ''}`}
+      ref={nodeRef}
+      onClick={handleClick}
+      role={props.editable ? 'button' : undefined}
+      tabIndex={props.editable ? 0 : undefined}
+      onKeyDown={props.editable ? (e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(); } : undefined}
+    >
       {status !== 'loaded' && <span className="list-icon-fallback">{props.fallback ?? <Globe size={18} />}</span>}
       {shouldRenderIconImage && (
         <img
@@ -118,7 +174,7 @@ export default function WebsiteIcon(props: WebsiteIconProps) {
           decoding="async"
         />
       )}
+      {props.editable && <span className="icon-edit-badge"><Camera size={12} /></span>}
     </span>
   );
 }
-

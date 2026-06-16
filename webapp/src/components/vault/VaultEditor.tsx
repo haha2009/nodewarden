@@ -1,6 +1,6 @@
 import type { RefObject } from 'preact';
 import { createPortal } from 'preact/compat';
-import { ArrowDown, ArrowUp, CheckCheck, Download, Paperclip, Plus, QrCode, RefreshCw, Star, StarOff, Trash2, Upload, X } from 'lucide-preact';
+import { ArrowDown, ArrowUp, CheckCheck, Copy, Download, Eye, EyeOff, Paperclip, Plus, QrCode, RefreshCw, Sparkles, Star, StarOff, Trash2, Upload, X } from 'lucide-preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { useDialogLifecycle } from '@/components/ConfirmDialog';
 import type { Cipher, Folder, VaultDraft, VaultDraftField } from '@/lib/types';
@@ -9,15 +9,24 @@ import { cardBrand } from '@/lib/import-format-shared';
 import {
   CARD_BRAND_OPTIONS,
   CardBrandIcon,
+  CreateTypeIcon,
+  PlatformIcon,
   cipherTypeLabel,
   createEmptyLoginUri,
+  firstCipherUri,
   formatAttachmentSize,
   formatHistoryTime,
   getCreateTypeOptions,
   getWebsiteMatchOptions,
   normalizeCardBrand,
+  openUri,
+  resizeImageToIcon,
+  suggestNameFromUrl,
   toBooleanFieldValue,
 } from '@/components/vault/vault-page-helpers';
+import WebsiteIcon from '@/components/vault/WebsiteIcon';
+import { beginWebsiteIconLoad } from '@/lib/website-icon-cache';
+import { hostFromUri, websiteIconUrl } from '@/components/vault/vault-page-helpers';
 
 interface VaultEditorProps {
   draft: VaultDraft;
@@ -286,6 +295,118 @@ export default function VaultEditor(props: VaultEditorProps) {
           percent: props.attachmentUploadPercent,
         });
 
+  const iconInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleIconUpload = () => {
+    iconInputRef.current?.click();
+  };
+
+  const handleIconFile = async (file: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    try {
+      const resized = await resizeImageToIcon(file, 64);
+      props.onUpdateDraft({ customIcon: resized });
+    } catch {
+      // Silently fail if image resize fails
+    }
+  };
+
+  const handleIconClick = () => {
+    if (!props.selectedCipher) return;
+    const uri = firstCipherUri(props.selectedCipher);
+    if (uri) openUri(uri);
+  };
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [aiDetected, setAiDetected] = useState(false);
+
+  // Password generator dialog state
+  const [pgOpen, setPgOpen] = useState(false);
+  const [pgPassword, setPgPassword] = useState('');
+  const [pgLength, setPgLength] = useState(20);
+  const [pgUppercase, setPgUppercase] = useState(true);
+  const [pgLowercase, setPgLowercase] = useState(true);
+  const [pgNumbers, setPgNumbers] = useState(true);
+  const [pgSymbols, setPgSymbols] = useState(true);
+  const [pgExcludeSimilar, setPgExcludeSimilar] = useState(false);
+  useDialogLifecycle(pgOpen, () => setPgOpen(false));
+
+  const generatePasswordWithOptions = (len: number, upper: boolean, lower: boolean, numbers: boolean, symbols: boolean, exclude: boolean): string => {
+    const upperChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowerChars = 'abcdefghijklmnopqrstuvwxyz';
+    const numberChars = '0123456789';
+    const symbolChars = '!@#$%^&*()-_=+';
+    const similarChars = 'il1Lo0O';
+    const filterSimilar = (s: string) => exclude ? [...s].filter(c => !similarChars.includes(c)).join('') : s;
+    let pool = '';
+    if (upper) pool += filterSimilar(upperChars);
+    if (lower) pool += filterSimilar(lowerChars);
+    if (numbers) pool += filterSimilar(numberChars);
+    if (symbols) pool += filterSimilar(symbolChars);
+    if (!pool) pool = 'abcdefghijklmnopqrstuvwxyz';
+    let result = '';
+    const sets: string[] = [];
+    if (upper) { const s = filterSimilar(upperChars); if (s) sets.push(s); }
+    if (lower) { const s = filterSimilar(lowerChars); if (s) sets.push(s); }
+    if (numbers) { const s = filterSimilar(numberChars); if (s) sets.push(s); }
+    if (symbols) { const s = filterSimilar(symbolChars); if (s) sets.push(s); }
+    for (const set of sets) {
+      result += set.charAt(Math.floor(Math.random() * set.length));
+    }
+    for (let i = result.length; i < len; i++) {
+      result += pool.charAt(Math.floor(Math.random() * pool.length));
+    }
+    return result;
+  };
+
+  const regeneratePreview = () => {
+    setPgPassword(generatePasswordWithOptions(pgLength, pgUppercase, pgLowercase, pgNumbers, pgSymbols, pgExcludeSimilar));
+  };
+
+  const [copied, setCopied] = useState(false);
+
+  const copyPassword = () => {
+    if (!props.draft.loginPassword) return;
+    navigator.clipboard.writeText(props.draft.loginPassword).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      // Clipboard not available
+    });
+  };
+
+  const openGeneratorDialog = () => {
+    const initialLen = pgLength;
+    const initialPassword = generatePasswordWithOptions(initialLen, pgUppercase, pgLowercase, pgNumbers, pgSymbols, pgExcludeSimilar);
+    setPgPassword(initialPassword);
+    setPgOpen(true);
+  };
+
+  const applyGeneratedPassword = () => {
+    props.onUpdateDraft({ loginPassword: pgPassword });
+    setPgOpen(false);
+  };
+
+  const handleAiDetect = () => {
+    const firstUri = props.draft.loginUris[0]?.uri || '';
+    if (!firstUri.trim()) return;
+    const suggested = suggestNameFromUrl(firstUri);
+    if (suggested) {
+      props.onUpdateDraft({ name: suggested });
+      // Also trigger website favicon load
+      const host = hostFromUri(firstUri);
+      if (host) {
+        const iconSrc = websiteIconUrl(host);
+        beginWebsiteIconLoad(host, iconSrc);
+      }
+      setAiDetected(true);
+      setTimeout(() => setAiDetected(false), 3000);
+    }
+  };
+
+  const isPasswordEmpty = () => props.draft.type === 1 && props.draft.loginType === 'password' && !props.draft.loginPassword;
+
   const addLoginUri = () => {
     props.onUpdateDraft({ loginUris: [...props.draft.loginUris, createEmptyLoginUri()] });
   };
@@ -328,25 +449,83 @@ export default function VaultEditor(props: VaultEditorProps) {
             ))}
           </select>
         </label>
+        {/* Vault selector — standard select, same as type field */}
         <label className="field">
-          <span>{t('txt_name')}</span>
-          <input className="input" value={props.draft.name} onInput={(e) => props.onUpdateDraft({ name: (e.currentTarget as HTMLInputElement).value })} />
+          <span>{t('txt_tag')}</span>
+          <select className="input" value={props.draft.folderId} onInput={(e) => props.onUpdateDraft({ folderId: (e.currentTarget as HTMLSelectElement).value })}>
+            <option value="">{t('txt_no_tag')}</option>
+            {props.folders.map((folder) => (
+              <option key={folder.id} value={folder.id}>
+                {folder.decName || folder.name || folder.id}
+              </option>
+            ))}
+          </select>
         </label>
+        {/* Website field — first in card: label above, AI button inside input */}
         {props.draft.type === 1 && (
-          <>
-            <div className="section-head">
-              <h4>{t('txt_websites')}</h4>
-              <button type="button" className="btn btn-secondary small" onClick={addLoginUri}>
-                <Plus size={14} className="btn-icon" /> {t('txt_add_website')}
+          <label className="field">
+            <span>{t('txt_website')}</span>
+            <div className="input-action-wrap">
+              <input
+                className="input"
+                value={props.draft.loginUris[0]?.uri || ''}
+                onInput={(e) => props.onUpdateDraftLoginUri(0, (e.currentTarget as HTMLInputElement).value)}
+                placeholder="https://example.com"
+              />
+              <button
+                type="button"
+                className={`input-icon-btn ai-detect-btn ${aiDetected ? 'ai-detected' : ''}`}
+                title={t('txt_ai_auto_name')}
+                aria-label={t('txt_ai_auto_name')}
+                onClick={handleAiDetect}
+                disabled={!props.draft.loginUris[0]?.uri?.trim()}
+              >
+                <Sparkles size={16} className={aiDetected ? 'sparkle-active' : ''} />
               </button>
             </div>
-            {props.draft.loginUris.map((uriEntry, index) => (
+          </label>
+        )}
+        {/* Name field — icon on left, label+input on right */}
+        <div className="name-field-group">
+          <div className="name-field-row">
+            <span className="name-icon-box" aria-hidden="true" onClick={props.isCreating ? handleIconUpload : undefined}>
+              {props.selectedCipher ? (
+                <WebsiteIcon
+                  cipher={props.selectedCipher}
+                  customIcon={props.draft.customIcon || undefined}
+                  editable={false}
+                  onClick={handleIconClick}
+                />
+              ) : (
+                <CreateTypeIcon type={props.draft.type} />
+              )}
+            </span>
+            <div className="name-field-input-block">
+              <span className="name-field-label">{t('txt_name')}</span>
+              <input
+                className="input"
+                value={props.draft.name}
+                onInput={(e) => props.onUpdateDraft({ name: (e.currentTarget as HTMLInputElement).value })}
+                placeholder={t('txt_enter_name_placeholder')}
+              />
+            </div>
+          </div>
+        </div>
+        {/* Add website button — no "其他网站" heading */}
+        {props.draft.type === 1 && props.draft.loginUris[0]?.uri?.trim() && (
+          <button type="button" className="btn btn-secondary small add-website-btn-inline" onClick={addLoginUri}>
+            <Plus size={14} className="btn-icon" /> {t('txt_add_website')}
+          </button>
+        )}
+        {props.draft.type === 1 && props.draft.loginUris.length > 1 && (
+          <div className="extra-websites-list">
+            {props.draft.loginUris.slice(1).map((uriEntry, index) => (
               <WebsiteRow
-                key={`uri-${index}`}
+                key={`uri-${index + 1}`}
                 uriEntry={uriEntry}
-                index={index}
+                index={index + 1}
                 canMoveUp={index > 0}
-                canMoveDown={index < props.draft.loginUris.length - 1}
+                canMoveDown={index + 1 < props.draft.loginUris.length - 1}
                 canRemove={props.draft.loginUris.length > 1}
                 onUpdateUri={props.onUpdateDraftLoginUri}
                 onUpdateMatch={props.onUpdateDraftLoginUriMatch}
@@ -354,81 +533,160 @@ export default function VaultEditor(props: VaultEditorProps) {
                 onRemove={removeLoginUri}
               />
             ))}
+            <button type="button" className="btn btn-secondary small add-website-btn-inline" onClick={addLoginUri}>
+              <Plus size={14} className="btn-icon" /> {t('txt_add_website')}
+            </button>
+          </div>
+        )}
+        {props.draft.type === 1 && (
+          <>
+            <div className="segmented-control">
+              <button
+                type="button"
+                className={`segmented-btn ${props.draft.loginType === 'password' ? 'active' : ''}`}
+                onClick={() => props.onUpdateDraft({ loginType: 'password' })}
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+                {t('txt_password_login')}
+              </button>
+              <button
+                type="button"
+                className={`segmented-btn ${props.draft.loginType === 'third_party' ? 'active' : ''}`}
+                onClick={() => props.onUpdateDraft({ loginType: 'third_party' })}
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                {t('txt_third_party_login')}
+              </button>
+            </div>
+            {props.draft.loginType === 'password' && (
+              <>
+                <label className="field">
+                  <span>{t('txt_username')}</span>
+                  <input className="input" value={props.draft.loginUsername} onInput={(e) => props.onUpdateDraft({ loginUsername: (e.currentTarget as HTMLInputElement).value })} />
+                </label>
+                <label className="field">
+                  <span>{t('txt_password')}</span>
+                  <div className="leading-input-inner">
+                      <input
+                        className="input"
+                        type={showPassword ? 'text' : 'password'}
+                        value={props.draft.loginPassword}
+                        onInput={(e) => props.onUpdateDraft({ loginPassword: (e.currentTarget as HTMLInputElement).value })}
+                      />
+                      <button
+                        type="button"
+                        className="input-icon-btn"
+                        title={t('txt_generate_password')}
+                        aria-label={t('txt_generate_password')}
+                        onClick={openGeneratorDialog}
+                      >
+                        <RefreshCw size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        className={`input-icon-btn ${copied ? 'pw-copied' : ''}`}
+                        title={copied ? t('txt_copied') : t('txt_copy_password')}
+                        aria-label={copied ? t('txt_copied') : t('txt_copy_password')}
+                        onClick={copyPassword}
+                        disabled={!props.draft.loginPassword}
+                      >
+                        {copied ? <CheckCheck size={16} /> : <Copy size={16} />}
+                      </button>
+                      <button
+                        type="button"
+                        className="input-icon-btn"
+                        title={showPassword ? t('txt_hide_password') : t('txt_show_password')}
+                        aria-label={showPassword ? t('txt_hide_password') : t('txt_show_password')}
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                </label>
+                <label className="field">
+                  <span>{t('txt_totp_secret')}</span>
+                  <div className="input-action-wrap">
+                    <input className="input" value={props.draft.loginTotp} onInput={(e) => props.onUpdateDraft({ loginTotp: (e.currentTarget as HTMLInputElement).value })} />
+                    <button
+                      type="button"
+                      className="input-icon-btn"
+                      title={t('txt_scan_totp_qr')}
+                      aria-label={t('txt_scan_totp_qr')}
+                      disabled={props.busy}
+                      onClick={() => {
+                        setTotpQrStatus('');
+                        setTotpQrOpen(true);
+                      }}
+                    >
+                      <QrCode size={18} className="btn-icon" />
+                    </button>
+                  </div>
+                </label>
+              </>
+            )}
+            {props.draft.loginType === 'third_party' && (
+              <>
+                <div className="platform-select-wrap">
+                  <PlatformIcon platform={props.draft.thirdPartyPlatform} />
+                  <select className="input" value={props.draft.thirdPartyPlatform} onInput={(e) => props.onUpdateDraft({ thirdPartyPlatform: (e.currentTarget as HTMLSelectElement).value })}>
+                    <option value="">{t('txt_select_platform')}</option>
+                    <option value="google">Google</option>
+                    <option value="apple">Apple</option>
+                    <option value="facebook">Facebook</option>
+                    <option value="microsoft">Microsoft</option>
+                    <option value="twitter">Twitter (X)</option>
+                    <option value="github">GitHub</option>
+                    <option value="wechat">微信</option>
+                    <option value="alipay">支付宝</option>
+                    <option value="amazon">Amazon</option>
+                    <option value="other">{t('txt_other')}</option>
+                  </select>
+                </div>
+                <label className="field">
+                  <span>{t('txt_third_party_account')}</span>
+                  <input className="input" value={props.draft.thirdPartyAccount} placeholder={t('txt_third_party_account_placeholder')} onInput={(e) => props.onUpdateDraft({ thirdPartyAccount: (e.currentTarget as HTMLInputElement).value })} />
+                </label>
+              </>
+            )}
+            {props.draft.loginFido2Credentials.length > 0 && (
+              <>
+                <div className="section-head passkeys-section-head">
+                  <h4>{t('txt_passkeys')}</h4>
+                </div>
+                <div className="attachment-list">
+                  {props.draft.loginFido2Credentials.map((credential, index) => {
+                    const createdAt = String(credential?.creationDate || '').trim();
+                    const label = createdAt
+                      ? t('txt_passkey_created_at_value', { value: formatHistoryTime(createdAt) })
+                      : t('txt_passkey');
+                    return (
+                      <div key={`login-passkey-${index}`} className="attachment-row">
+                        <div className="attachment-main">
+                          <div className="attachment-text">
+                            <strong>{t('txt_passkey')}</strong>
+                            <span>{label}</span>
+                          </div>
+                        </div>
+                        <div className="kv-actions">
+                          <button
+                            type="button"
+                            className="btn btn-secondary small"
+                            disabled={props.busy}
+                            onClick={() => props.onRequestDeleteLoginPasskey(index)}
+                          >
+                            <X size={14} className="btn-icon" />
+                            {t('txt_remove')}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
-
-      {props.draft.type === 1 && (
-        <div className="card">
-          <h4>{t('txt_login_credentials')}</h4>
-          <div className="field-grid">
-            <label className="field">
-              <span>{t('txt_username')}</span>
-              <input className="input" value={props.draft.loginUsername} onInput={(e) => props.onUpdateDraft({ loginUsername: (e.currentTarget as HTMLInputElement).value })} />
-            </label>
-            <label className="field">
-              <span>{t('txt_password')}</span>
-              <input className="input" value={props.draft.loginPassword} onInput={(e) => props.onUpdateDraft({ loginPassword: (e.currentTarget as HTMLInputElement).value })} />
-            </label>
-          </div>
-          <label className="field">
-            <span>{t('txt_totp_secret')}</span>
-            <div className="input-action-wrap">
-              <input className="input" value={props.draft.loginTotp} onInput={(e) => props.onUpdateDraft({ loginTotp: (e.currentTarget as HTMLInputElement).value })} />
-              <button
-                type="button"
-                className="input-icon-btn"
-                title={t('txt_scan_totp_qr')}
-                aria-label={t('txt_scan_totp_qr')}
-                disabled={props.busy}
-                onClick={() => {
-                  setTotpQrStatus('');
-                  setTotpQrOpen(true);
-                }}
-              >
-                <QrCode size={18} className="btn-icon" />
-              </button>
-            </div>
-          </label>
-
-          {props.draft.loginFido2Credentials.length > 0 && (
-            <>
-              <div className="section-head passkeys-section-head">
-                <h4>{t('txt_passkeys')}</h4>
-              </div>
-              <div className="attachment-list">
-                {props.draft.loginFido2Credentials.map((credential, index) => {
-                  const createdAt = String(credential?.creationDate || '').trim();
-                  const label = createdAt
-                    ? t('txt_passkey_created_at_value', { value: formatHistoryTime(createdAt) })
-                    : t('txt_passkey');
-                  return (
-                    <div key={`login-passkey-${index}`} className="attachment-row">
-                      <div className="attachment-main">
-                        <div className="attachment-text">
-                          <strong>{t('txt_passkey')}</strong>
-                          <span>{label}</span>
-                        </div>
-                      </div>
-                      <div className="kv-actions">
-                        <button
-                          type="button"
-                          className="btn btn-secondary small"
-                          disabled={props.busy}
-                          onClick={() => props.onRequestDeleteLoginPasskey(index)}
-                        >
-                          <X size={14} className="btn-icon" />
-                          {t('txt_remove')}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </div>
-      )}
 
       {props.draft.type === 3 && (
         <div className="card">
@@ -534,6 +792,31 @@ export default function VaultEditor(props: VaultEditorProps) {
             <span>{t('txt_fingerprint')}</span>
             <input className="input input-readonly" value={props.draft.sshFingerprint} readOnly />
           </label>
+        </div>
+      )}
+
+      {/* Hidden file input for icon upload */}
+      <input
+        ref={iconInputRef}
+        type="file"
+        accept="image/*"
+        className="attachment-file-input"
+        onChange={(e) => {
+          const input = e.currentTarget as HTMLInputElement;
+          void handleIconFile(input.files?.[0] || null);
+          input.value = '';
+        }}
+      />
+
+      {props.draft.customIcon && (
+        <div className="card">
+          <div className="section-head">
+            <h4>{t('txt_custom_icon')}</h4>
+            <button type="button" className="btn btn-secondary small" onClick={() => props.onUpdateDraft({ customIcon: '' })}>
+              {t('txt_remove')}
+            </button>
+          </div>
+          <div className="detail-sub">{t('txt_custom_icon_hint')}</div>
         </div>
       )}
 
@@ -746,18 +1029,6 @@ export default function VaultEditor(props: VaultEditorProps) {
             </div>
           ));
         })()}
-        <hr className="detail-hr" />
-        <label className="field">
-          <span>{t('txt_tag')}</span>
-          <select className="input" value={props.draft.folderId} onInput={(e) => props.onUpdateDraft({ folderId: (e.currentTarget as HTMLSelectElement).value })}>
-            <option value="">{t('txt_no_tag')}</option>
-            {props.folders.map((folder) => (
-              <option key={folder.id} value={folder.id}>
-                {folder.decName || folder.name || folder.id}
-              </option>
-            ))}
-          </select>
-        </label>
       </div>
 
       <div className="card">
@@ -774,9 +1045,9 @@ export default function VaultEditor(props: VaultEditorProps) {
 
       <div className="detail-actions">
         <div className="actions">
-          <button type="button" className="btn btn-primary" disabled={props.busy} onClick={props.onSave}>
-            <CheckCheck size={14} className="btn-icon" />
-            {t('txt_confirm')}
+          <button type="button" className="btn btn-primary" disabled={props.busy || isPasswordEmpty()} onClick={props.onSave}>
+            {props.busy ? <span className="btn-spinner" /> : <CheckCheck size={14} className="btn-icon" />}
+            {props.busy ? t('txt_saving') : t('txt_confirm')}
           </button>
           <button type="button" className="btn btn-secondary" disabled={props.busy} onClick={props.onCancel}>
             <X size={14} className="btn-icon" />
@@ -791,6 +1062,89 @@ export default function VaultEditor(props: VaultEditorProps) {
         )}
       </div>
       {props.localError && <div className="local-error">{props.localError}</div>}
+      {pgOpen && typeof document !== 'undefined' ? createPortal((
+        <div className="dialog-mask open" onClick={(event) => event.target === event.currentTarget && setPgOpen(false)}>
+          <section className="dialog-card pw-gen-dialog open" role="dialog" aria-modal="true" aria-label={t('txt_generate_password')}>
+            <div className="pw-gen-head">
+              <h3 className="dialog-title">{t('txt_generate_password')}</h3>
+              <button
+                type="button"
+                className="pw-gen-close"
+                onClick={() => setPgOpen(false)}
+                title={t('txt_close')}
+                aria-label={t('txt_close')}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="pw-gen-body">
+              <div className="pw-gen-preview-row">
+                <input className="input pw-gen-preview" value={pgPassword} readOnly />
+                <button type="button" className="btn btn-secondary small" onClick={regeneratePreview}>
+                  <RefreshCw size={14} className="btn-icon" />
+                </button>
+              </div>
+              <div className="pw-gen-slider-row">
+                <span>{t('txt_password_length')}: {pgLength}</span>
+                <input
+                  type="range"
+                  min={8}
+                  max={32}
+                  value={pgLength}
+                  className="pw-gen-slider"
+                  onInput={(e) => {
+                    const newLen = Number((e.currentTarget as HTMLInputElement).value);
+                    setPgLength(newLen);
+                    setPgPassword(generatePasswordWithOptions(newLen, pgUppercase, pgLowercase, pgNumbers, pgSymbols, pgExcludeSimilar));
+                  }}
+                />
+              </div>
+              <div className="pw-gen-options">
+                <label className="pw-gen-option">
+                  <input type="checkbox" checked={pgUppercase} onInput={() => {
+                    const next = !pgUppercase; setPgUppercase(next);
+                    setPgPassword(generatePasswordWithOptions(pgLength, next, pgLowercase, pgNumbers, pgSymbols, pgExcludeSimilar));
+                  }} />
+                  <span>A-Z</span>
+                </label>
+                <label className="pw-gen-option">
+                  <input type="checkbox" checked={pgLowercase} onInput={() => {
+                    const next = !pgLowercase; setPgLowercase(next);
+                    setPgPassword(generatePasswordWithOptions(pgLength, pgUppercase, next, pgNumbers, pgSymbols, pgExcludeSimilar));
+                  }} />
+                  <span>a-z</span>
+                </label>
+                <label className="pw-gen-option">
+                  <input type="checkbox" checked={pgNumbers} onInput={() => {
+                    const next = !pgNumbers; setPgNumbers(next);
+                    setPgPassword(generatePasswordWithOptions(pgLength, pgUppercase, pgLowercase, next, pgSymbols, pgExcludeSimilar));
+                  }} />
+                  <span>0-9</span>
+                </label>
+                <label className="pw-gen-option">
+                  <input type="checkbox" checked={pgSymbols} onInput={() => {
+                    const next = !pgSymbols; setPgSymbols(next);
+                    setPgPassword(generatePasswordWithOptions(pgLength, pgUppercase, pgLowercase, pgNumbers, next, pgExcludeSimilar));
+                  }} />
+                  <span>!@#$%</span>
+                </label>
+                <label className="pw-gen-option">
+                  <input type="checkbox" checked={pgExcludeSimilar} onInput={() => {
+                    const next = !pgExcludeSimilar; setPgExcludeSimilar(next);
+                    setPgPassword(generatePasswordWithOptions(pgLength, pgUppercase, pgLowercase, pgNumbers, pgSymbols, next));
+                  }} />
+                  <span>{t('txt_exclude_similar')}</span>
+                </label>
+              </div>
+            </div>
+            <div className="pw-gen-footer">
+              <button type="button" className="btn btn-primary full" onClick={applyGeneratedPassword}>
+                <CheckCheck size={14} className="btn-icon" /> {t('txt_apply')}
+              </button>
+            </div>
+          </section>
+        </div>
+      ), document.body) : null}
       {totpQrOpen && typeof document !== 'undefined' ? createPortal((
         <div className="dialog-mask totp-scan-mask open" onClick={(event) => event.target === event.currentTarget && setTotpQrOpen(false)}>
           <section className="dialog-card totp-scan-dialog open" role="dialog" aria-modal="true" aria-label={t('txt_scan_totp_qr')}>

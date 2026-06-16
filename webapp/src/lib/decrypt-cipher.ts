@@ -51,6 +51,7 @@ export async function decryptSingleCipher(
     ...encrypted,
     decName: await decryptCipherField(encrypted.name, itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
     decNotes: await decryptCipherField(encrypted.notes, itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
+    decIcon: await decryptCipherField(encrypted.icon, itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
   };
 
   if (encrypted.login) {
@@ -59,6 +60,9 @@ export async function decryptSingleCipher(
       decUsername: await decryptCipherField(encrypted.login.username, itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
       decPassword: await decryptCipherField(encrypted.login.password, itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
       decTotp: await decryptCipherField(encrypted.login.totp, itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
+      decLoginType: await decryptCipherField((encrypted.login as Record<string, string | null>).loginType, itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
+      decThirdPartyPlatform: await decryptCipherField((encrypted.login as Record<string, string | null>).thirdPartyPlatform, itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
+      decThirdPartyAccount: await decryptCipherField((encrypted.login as Record<string, string | null>).thirdPartyAccount, itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
       uris: await Promise.all((encrypted.login.uris || []).map(async (u) => ({
         ...u,
         decUri: await decryptCipherField(u.uri, itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
