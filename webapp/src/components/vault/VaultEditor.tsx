@@ -309,42 +309,53 @@ export default function VaultEditor(props: VaultEditorProps) {
             {t('txt_favorite')}
           </button>
         </div>
-        <div className="field-grid">
-          <label className="field">
-            <span>{t('txt_type')}</span>
-            <select
-              className="input"
-              value={props.draft.type}
-              disabled={!props.isCreating}
-              onInput={(e) => {
-                const nextType = Number((e.currentTarget as HTMLSelectElement).value);
-                props.onUpdateDraft({ type: nextType });
-                if (nextType === 5) props.onSeedSshDefaults();
-              }}
-            >
-              {createTypeOptions.map((option) => (
-                <option key={option.type} value={option.type}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span>{t('txt_folder')}</span>
-            <select className="input" value={props.draft.folderId} onInput={(e) => props.onUpdateDraft({ folderId: (e.currentTarget as HTMLSelectElement).value })}>
-              <option value="">{t('txt_no_folder')}</option>
-              {props.folders.map((folder) => (
-                <option key={folder.id} value={folder.id}>
-                  {folder.decName || folder.name || folder.id}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+        <label className="field">
+          <span>{t('txt_type')}</span>
+          <select
+            className="input"
+            value={props.draft.type}
+            disabled={!props.isCreating}
+            onInput={(e) => {
+              const nextType = Number((e.currentTarget as HTMLSelectElement).value);
+              props.onUpdateDraft({ type: nextType });
+              if (nextType === 5) props.onSeedSshDefaults();
+            }}
+          >
+            {createTypeOptions.map((option) => (
+              <option key={option.type} value={option.type}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="field">
           <span>{t('txt_name')}</span>
           <input className="input" value={props.draft.name} onInput={(e) => props.onUpdateDraft({ name: (e.currentTarget as HTMLInputElement).value })} />
         </label>
+        {props.draft.type === 1 && (
+          <>
+            <div className="section-head">
+              <h4>{t('txt_websites')}</h4>
+              <button type="button" className="btn btn-secondary small" onClick={addLoginUri}>
+                <Plus size={14} className="btn-icon" /> {t('txt_add_website')}
+              </button>
+            </div>
+            {props.draft.loginUris.map((uriEntry, index) => (
+              <WebsiteRow
+                key={`uri-${index}`}
+                uriEntry={uriEntry}
+                index={index}
+                canMoveUp={index > 0}
+                canMoveDown={index < props.draft.loginUris.length - 1}
+                canRemove={props.draft.loginUris.length > 1}
+                onUpdateUri={props.onUpdateDraftLoginUri}
+                onUpdateMatch={props.onUpdateDraftLoginUriMatch}
+                onMove={moveLoginUri}
+                onRemove={removeLoginUri}
+              />
+            ))}
+          </>
+        )}
       </div>
 
       {props.draft.type === 1 && (
@@ -379,26 +390,7 @@ export default function VaultEditor(props: VaultEditorProps) {
               </button>
             </div>
           </label>
-          <div className="section-head">
-            <h4>{t('txt_websites')}</h4>
-            <button type="button" className="btn btn-secondary small" onClick={addLoginUri}>
-              <Plus size={14} className="btn-icon" /> {t('txt_add_website')}
-            </button>
-          </div>
-          {props.draft.loginUris.map((uriEntry, index) => (
-            <WebsiteRow
-              key={`uri-${index}`}
-              uriEntry={uriEntry}
-              index={index}
-              canMoveUp={index > 0}
-              canMoveDown={index < props.draft.loginUris.length - 1}
-              canRemove={props.draft.loginUris.length > 1}
-              onUpdateUri={props.onUpdateDraftLoginUri}
-              onUpdateMatch={props.onUpdateDraftLoginUriMatch}
-              onMove={moveLoginUri}
-              onRemove={removeLoginUri}
-            />
-          ))}
+
           {props.draft.loginFido2Credentials.length > 0 && (
             <>
               <div className="section-head passkeys-section-head">
@@ -754,6 +746,18 @@ export default function VaultEditor(props: VaultEditorProps) {
             </div>
           ));
         })()}
+        <hr className="detail-hr" />
+        <label className="field">
+          <span>{t('txt_tag')}</span>
+          <select className="input" value={props.draft.folderId} onInput={(e) => props.onUpdateDraft({ folderId: (e.currentTarget as HTMLSelectElement).value })}>
+            <option value="">{t('txt_no_tag')}</option>
+            {props.folders.map((folder) => (
+              <option key={folder.id} value={folder.id}>
+                {folder.decName || folder.name || folder.id}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <div className="card">
