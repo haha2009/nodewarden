@@ -536,6 +536,7 @@ function draftFromDecryptedCipher(cipher: Cipher): VaultDraft {
     thirdPartyPlatform: '',
     thirdPartyAccount: '',
     loginFido2Credentials: [],
+    customIcon: '',
     cardholderName: '',
     cardNumber: '',
     cardBrand: '',

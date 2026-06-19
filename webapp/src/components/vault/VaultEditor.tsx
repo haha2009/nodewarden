@@ -17,6 +17,7 @@ import {
   formatAttachmentSize,
   formatHistoryTime,
   getCreateTypeOptions,
+  getLinkedIdOptions,
   getWebsiteMatchOptions,
   normalizeCardBrand,
   openUri,
@@ -430,38 +431,39 @@ export default function VaultEditor(props: VaultEditorProps) {
             {t('txt_favorite')}
           </button>
         </div>
-        <label className="field">
-          <span>{t('txt_type')}</span>
-          <select
-            className="input"
-            value={props.draft.type}
-            disabled={!props.isCreating}
-            onInput={(e) => {
-              const nextType = Number((e.currentTarget as HTMLSelectElement).value);
-              props.onUpdateDraft({ type: nextType });
-              if (nextType === 5) props.onSeedSshDefaults();
-            }}
-          >
-            {createTypeOptions.map((option) => (
-              <option key={option.type} value={option.type}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        {/* Vault selector — standard select, same as type field */}
-        <label className="field">
-          <span>{t('txt_tag')}</span>
-          <select className="input" value={props.draft.folderId} onInput={(e) => props.onUpdateDraft({ folderId: (e.currentTarget as HTMLSelectElement).value })}>
-            <option value="">{t('txt_no_tag')}</option>
-            {props.folders.map((folder) => (
-              <option key={folder.id} value={folder.id}>
-                {folder.decName || folder.name || folder.id}
-              </option>
-            ))}
-          </select>
-        </label>
-        {/* Website field — first in card: label above, AI button inside input */}
+        <div className="field-row">
+          <label className="field field-compact">
+            <span>{t('txt_type')}</span>
+            <select
+              className="input"
+              value={props.draft.type}
+              disabled={!props.isCreating}
+              onInput={(e) => {
+                const nextType = Number((e.currentTarget as HTMLSelectElement).value);
+                props.onUpdateDraft({ type: nextType });
+                if (nextType === 5) props.onSeedSshDefaults();
+              }}
+            >
+              {createTypeOptions.map((option) => (
+                <option key={option.type} value={option.type}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field field-compact">
+            <span>{t('txt_tag')}</span>
+            <select className="input" value={props.draft.folderId} onInput={(e) => props.onUpdateDraft({ folderId: (e.currentTarget as HTMLSelectElement).value })}>
+              <option value="">{t('txt_no_tag')}</option>
+              {props.folders.map((folder) => (
+                <option key={folder.id} value={folder.id}>
+                  {folder.decName || folder.name || folder.id}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        {/* Website field */}
         {props.draft.type === 1 && (
           <label className="field">
             <span>{t('txt_website')}</span>
@@ -485,21 +487,24 @@ export default function VaultEditor(props: VaultEditorProps) {
             </div>
           </label>
         )}
-        {/* Name field — icon on left, label+input on right */}
+        {/* Name field — label above input, icon with logo label on the left */}
         <div className="name-field-group">
           <div className="name-field-row">
-            <span className="name-icon-box" aria-hidden="true" onClick={props.isCreating ? handleIconUpload : undefined}>
-              {props.selectedCipher ? (
-                <WebsiteIcon
-                  cipher={props.selectedCipher}
-                  customIcon={props.draft.customIcon || undefined}
-                  editable={false}
-                  onClick={handleIconClick}
-                />
-              ) : (
-                <CreateTypeIcon type={props.draft.type} />
-              )}
-            </span>
+            <div className="name-field-icon-col">
+              <span className="name-field-label">{t('txt_logo')}</span>
+              <span className="name-icon-box" aria-hidden="true" onClick={props.isCreating ? handleIconUpload : undefined}>
+                {props.selectedCipher ? (
+                  <WebsiteIcon
+                    cipher={props.selectedCipher}
+                    customIcon={props.draft.customIcon || undefined}
+                    editable={false}
+                    onClick={handleIconClick}
+                  />
+                ) : (
+                  <CreateTypeIcon type={props.draft.type} />
+                )}
+              </span>
+            </div>
             <div className="name-field-input-block">
               <span className="name-field-label">{t('txt_name')}</span>
               <input
@@ -919,8 +924,12 @@ export default function VaultEditor(props: VaultEditorProps) {
         )}
         {(() => {
           const visible = props.draft.customFields
-            .map((field, index) => ({ field, index }))
-            .filter((entry) => entry.field.type !== 3);
+            .map((field, index) => ({ field, index }));
+          const linkedIdOptions = getLinkedIdOptions();
+          const linkedIdLabel = (linkedId: number) => {
+            const option = linkedIdOptions.find(o => o.value === linkedId);
+            return option?.label || t('txt_unknown');
+          };
           const groups = new Map<string, typeof visible>();
           for (const entry of visible) {
             const g = entry.field.group || '';
@@ -980,7 +989,9 @@ export default function VaultEditor(props: VaultEditorProps) {
                     </label>
                     <div className="custom-field-body">
                       <div className="custom-field-value">
-                        {field.type === 2 ? (
+                        {field.type === 3 ? (
+                          <div className="detail-sub">{t('txt_linked_identity_field')}: {linkedIdLabel(field.linkedId ?? 0)}</div>
+                        ) : field.type === 2 ? (
                           <label className="check-line cf-check custom-field-check">
                             <input
                               type="checkbox"

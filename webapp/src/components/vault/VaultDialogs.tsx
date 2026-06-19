@@ -1,6 +1,6 @@
 import ConfirmDialog from '@/components/ConfirmDialog';
 import type { Folder } from '@/lib/types';
-import { getFieldTypeOptions, toBooleanFieldValue } from '@/components/vault/vault-page-helpers';
+import { getFieldTypeOptions, getLinkedIdOptions, toBooleanFieldValue } from '@/components/vault/vault-page-helpers';
 import { t } from '@/lib/i18n';
 
 interface VaultDialogsProps {
@@ -10,6 +10,7 @@ interface VaultDialogsProps {
   fieldLabel: string;
   fieldValue: string;
   fieldGroup: string;
+  fieldLinkedId: number | null;
   archiveConfirmOpen: boolean;
   bulkArchiveOpen: boolean;
   pendingDeleteOpen: boolean;
@@ -34,6 +35,7 @@ interface VaultDialogsProps {
   onFieldLabelChange: (value: string) => void;
   onFieldValueChange: (value: string) => void;
   onFieldGroupChange: (value: string) => void;
+  onFieldLinkedIdChange: (value: number | null) => void;
   onConfirmArchive: () => void;
   onCancelArchive: () => void;
   onConfirmBulkArchive: () => void;
@@ -64,6 +66,7 @@ interface VaultDialogsProps {
 
 export default function VaultDialogs(props: VaultDialogsProps) {
   const fieldTypeOptions = getFieldTypeOptions();
+  const linkedIdOptions = getLinkedIdOptions();
   return (
     <>
       <ConfirmDialog
@@ -93,6 +96,26 @@ export default function VaultDialogs(props: VaultDialogsProps) {
           <span>{t('txt_field_group')}</span>
           <input className="input" value={props.fieldGroup} placeholder={t('txt_field_group_placeholder')} onInput={(e) => props.onFieldGroupChange((e.currentTarget as HTMLInputElement).value)} />
         </label>
+        {props.fieldType === 3 && (
+          <label className="field">
+            <span>{t('txt_linked_identity_field')}</span>
+            <select
+              className="input"
+              value={props.fieldLinkedId == null ? '' : String(props.fieldLinkedId)}
+              onInput={(e) => {
+                const raw = (e.currentTarget as HTMLSelectElement).value;
+                props.onFieldLinkedIdChange(raw === '' ? null : Number(raw));
+              }}
+            >
+              <option value="">{t('txt_select')}</option>
+              {linkedIdOptions.map((option) => (
+                <option key={option.value} value={String(option.value)}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         {props.fieldType === 2 ? (
           <label className="check-line">
             <input

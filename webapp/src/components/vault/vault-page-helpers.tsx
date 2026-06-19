@@ -212,7 +212,31 @@ export function getFieldTypeOptions(): Array<{ value: CustomFieldType; label: st
     { value: 0, label: t('txt_text') },
     { value: 1, label: t('txt_hidden') },
     { value: 2, label: t('txt_boolean') },
+    { value: 3, label: t('txt_linked') },
     { value: 4, label: t('txt_attachment') },
+  ];
+}
+
+export function getLinkedIdOptions(): Array<{ value: number; label: string }> {
+  return [
+    { value: 100, label: t('txt_title') },
+    { value: 117, label: t('txt_first_name') },
+    { value: 101, label: t('txt_middle_name') },
+    { value: 102, label: t('txt_last_name') },
+    { value: 103, label: t('txt_address_1') },
+    { value: 104, label: t('txt_address_2') },
+    { value: 105, label: t('txt_address_3') },
+    { value: 106, label: t('txt_city_town') },
+    { value: 107, label: t('txt_state_province') },
+    { value: 108, label: t('txt_postal_code') },
+    { value: 109, label: t('txt_country') },
+    { value: 110, label: t('txt_company') },
+    { value: 111, label: t('txt_email') },
+    { value: 112, label: t('txt_phone') },
+    { value: 113, label: t('txt_ssn') },
+    { value: 114, label: t('txt_username') },
+    { value: 115, label: t('txt_passport_number') },
+    { value: 116, label: t('txt_license_number') },
   ];
 }
 

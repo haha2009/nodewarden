@@ -1,5 +1,5 @@
 .loading-screen {
-  @apply grid h-full place-items-center text-lg text-muted;
+  @apply grid h-full place-items-center text-lg;
 }
 
 .auth-page {
@@ -445,8 +445,10 @@
 }
 
 .auth-card {
-  @apply relative w-full overflow-hidden border bg-panel p-[30px] shadow-elevated;
+  @apply relative w-full overflow-hidden border p-[30px];
   border-color: var(--line);
+  background: var(--panel);
+  box-shadow: var(--shadow-elevated, 0 12px 28px rgba(15,23,42,0.08));
   @apply rounded-[22px];
 }
 

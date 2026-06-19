@@ -1,8 +1,9 @@
 .muted {
-  @apply m-0 mb-4 text-center text-muted;
+  @apply m-0 mb-4 text-center;
   font-size: var(--font-sm);
   line-height: var(--leading-relaxed);
   letter-spacing: var(--tracking-normal);
+  color: var(--muted);
 }
 
 .field {
