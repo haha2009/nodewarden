@@ -242,13 +242,9 @@ export function getLinkedIdOptions(): Array<{ value: number; label: string }> {
 
 export function getWebsiteMatchOptions(): Array<{ value: number | null; label: string }> {
   return [
-    { value: null, label: t('txt_uri_match_default_base_domain') },
-    { value: 0, label: t('txt_uri_match_base_domain') },
-    { value: 1, label: t('txt_uri_match_host') },
-    { value: 3, label: t('txt_uri_match_exact') },
-    { value: 5, label: t('txt_uri_match_never') },
-    { value: 2, label: t('txt_uri_match_starts_with') },
-    { value: 4, label: t('txt_uri_match_regular_expression') },
+    { value: null, label: t('txt_uri_match_homepage') },
+    { value: 1, label: t('txt_uri_match_login_page') },
+    { value: 3, label: t('txt_uri_match_other') },
   ];
 }
 

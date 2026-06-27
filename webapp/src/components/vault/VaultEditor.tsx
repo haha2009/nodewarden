@@ -10,15 +10,13 @@ import {
   CARD_BRAND_OPTIONS,
   CardBrandIcon,
   CreateTypeIcon,
-  PlatformIcon,
   cipherTypeLabel,
-  createEmptyLoginUri,
   firstCipherUri,
   formatAttachmentSize,
   formatHistoryTime,
   getCreateTypeOptions,
   getLinkedIdOptions,
-  getWebsiteMatchOptions,
+
   normalizeCardBrand,
   openUri,
   resizeImageToIcon,
@@ -62,80 +60,6 @@ interface VaultEditorProps {
   onSave: () => void;
   onCancel: () => void;
   onDeleteSelected: () => void;
-}
-
-interface WebsiteRowProps {
-  uriEntry: VaultDraft['loginUris'][number];
-  index: number;
-  canRemove: boolean;
-  canMoveUp: boolean;
-  canMoveDown: boolean;
-  onUpdateUri: (index: number, value: string) => void;
-  onUpdateMatch: (index: number, value: number | null) => void;
-  onMove: (fromIndex: number, toIndex: number) => void;
-  onRemove: (index: number) => void;
-}
-
-function WebsiteRow(props: WebsiteRowProps) {
-  const websiteMatchOptions = getWebsiteMatchOptions();
-
-  return (
-    <div className="website-row">
-      <div className="website-order-actions">
-        <button
-          type="button"
-          className="btn btn-secondary small website-order-btn"
-          title={t('txt_move_up')}
-          aria-label={t('txt_move_up')}
-          disabled={!props.canMoveUp}
-          onClick={() => props.onMove(props.index, props.index - 1)}
-        >
-          <ArrowUp size={14} className="btn-icon" />
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary small website-order-btn"
-          title={t('txt_move_down')}
-          aria-label={t('txt_move_down')}
-          disabled={!props.canMoveDown}
-          onClick={() => props.onMove(props.index, props.index + 1)}
-        >
-          <ArrowDown size={14} className="btn-icon" />
-        </button>
-      </div>
-      <input
-        className="input"
-        value={props.uriEntry.uri}
-        onInput={(e) => props.onUpdateUri(props.index, (e.currentTarget as HTMLInputElement).value)}
-      />
-      <select
-        className="input website-match-select"
-        value={props.uriEntry.match == null ? '' : String(props.uriEntry.match)}
-        onInput={(e) => {
-          const raw = (e.currentTarget as HTMLSelectElement).value;
-          props.onUpdateMatch(props.index, raw === '' ? null : Number(raw));
-        }}
-      >
-        {websiteMatchOptions.map((option) => (
-          <option key={`website-match-${String(option.value)}`} value={option.value == null ? '' : String(option.value)}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      {props.canRemove && (
-        <button
-          type="button"
-          className="btn btn-secondary small website-remove-btn"
-          title={t('txt_remove')}
-          aria-label={t('txt_remove')}
-          onClick={() => props.onRemove(props.index)}
-        >
-          <X size={14} className="btn-icon" />
-          {t('txt_remove')}
-        </button>
-      )}
-    </div>
-  );
 }
 
 export default function VaultEditor(props: VaultEditorProps) {
@@ -408,19 +332,6 @@ export default function VaultEditor(props: VaultEditorProps) {
 
   const isPasswordEmpty = () => props.draft.type === 1 && props.draft.loginType === 'password' && !props.draft.loginPassword;
 
-  const addLoginUri = () => {
-    props.onUpdateDraft({ loginUris: [...props.draft.loginUris, createEmptyLoginUri()] });
-  };
-
-  const removeLoginUri = (index: number) => {
-    props.onUpdateDraft({ loginUris: props.draft.loginUris.filter((_, itemIndex) => itemIndex !== index) });
-  };
-
-  const moveLoginUri = (fromIndex: number, toIndex: number) => {
-    if (fromIndex < 0 || toIndex < 0 || fromIndex >= props.draft.loginUris.length || toIndex >= props.draft.loginUris.length || fromIndex === toIndex) return;
-    props.onReorderDraftLoginUri(fromIndex, toIndex);
-  };
-
   return (
     <>
       <div className="card">
@@ -463,31 +374,45 @@ export default function VaultEditor(props: VaultEditorProps) {
             </select>
           </label>
         </div>
-        {/* Website field */}
+        {/* Website URLs — homepage + login page */}
         {props.draft.type === 1 && (
-          <label className="field">
-            <span>{t('txt_website')}</span>
-            <div className="input-action-wrap">
+          <>
+            <label className="field">
+              <span>{t('txt_website_homepage')}</span>
+              <div className="input-action-wrap">
+                <input
+                  className="input"
+                  value={props.draft.loginUris[0]?.uri || ''}
+                  onInput={(e) => props.onUpdateDraftLoginUri(0, (e.currentTarget as HTMLInputElement).value)}
+                  placeholder="https://example.com"
+                />
+                <button
+                  type="button"
+                  className={`input-icon-btn ai-detect-btn ${aiDetected ? 'ai-detected' : ''}`}
+                  title={t('txt_ai_auto_name')}
+                  aria-label={t('txt_ai_auto_name')}
+                  onClick={handleAiDetect}
+                  disabled={!props.draft.loginUris[0]?.uri?.trim()}
+                >
+                  <Sparkles size={16} className={aiDetected ? 'sparkle-active' : ''} />
+                </button>
+              </div>
+            </label>
+            <label className="field">
+              <span>{t('txt_website_login_page')}</span>
               <input
                 className="input"
-                value={props.draft.loginUris[0]?.uri || ''}
-                onInput={(e) => props.onUpdateDraftLoginUri(0, (e.currentTarget as HTMLInputElement).value)}
+                value={props.draft.loginUris[1]?.uri || ''}
+                onInput={(e) => {
+                  props.onUpdateDraftLoginUri(1, (e.currentTarget as HTMLInputElement).value);
+                  if (props.draft.loginUris[1]?.match !== 1) props.onUpdateDraftLoginUriMatch(1, 1);
+                }}
                 placeholder="https://example.com"
               />
-              <button
-                type="button"
-                className={`input-icon-btn ai-detect-btn ${aiDetected ? 'ai-detected' : ''}`}
-                title={t('txt_ai_auto_name')}
-                aria-label={t('txt_ai_auto_name')}
-                onClick={handleAiDetect}
-                disabled={!props.draft.loginUris[0]?.uri?.trim()}
-              >
-                <Sparkles size={16} className={aiDetected ? 'sparkle-active' : ''} />
-              </button>
-            </div>
-          </label>
+            </label>
+          </>
         )}
-        {/* Name field — label above input, icon with logo label on the left */}
+        {/* Name field — icon with logo label + name input */}
         <div className="name-field-group">
           <div className="name-field-row">
             <div className="name-field-icon-col">
@@ -516,143 +441,70 @@ export default function VaultEditor(props: VaultEditorProps) {
             </div>
           </div>
         </div>
-        {/* Add website button — no "其他网站" heading */}
-        {props.draft.type === 1 && props.draft.loginUris[0]?.uri?.trim() && (
-          <button type="button" className="btn btn-secondary small add-website-btn-inline" onClick={addLoginUri}>
-            <Plus size={14} className="btn-icon" /> {t('txt_add_website')}
-          </button>
-        )}
-        {props.draft.type === 1 && props.draft.loginUris.length > 1 && (
-          <div className="extra-websites-list">
-            {props.draft.loginUris.slice(1).map((uriEntry, index) => (
-              <WebsiteRow
-                key={`uri-${index + 1}`}
-                uriEntry={uriEntry}
-                index={index + 1}
-                canMoveUp={index > 0}
-                canMoveDown={index + 1 < props.draft.loginUris.length - 1}
-                canRemove={props.draft.loginUris.length > 1}
-                onUpdateUri={props.onUpdateDraftLoginUri}
-                onUpdateMatch={props.onUpdateDraftLoginUriMatch}
-                onMove={moveLoginUri}
-                onRemove={removeLoginUri}
-              />
-            ))}
-            <button type="button" className="btn btn-secondary small add-website-btn-inline" onClick={addLoginUri}>
-              <Plus size={14} className="btn-icon" /> {t('txt_add_website')}
-            </button>
-          </div>
-        )}
         {props.draft.type === 1 && (
           <>
-            <div className="segmented-control">
-              <button
-                type="button"
-                className={`segmented-btn ${props.draft.loginType === 'password' ? 'active' : ''}`}
-                onClick={() => props.onUpdateDraft({ loginType: 'password' })}
-              >
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
-                {t('txt_password_login')}
-              </button>
-              <button
-                type="button"
-                className={`segmented-btn ${props.draft.loginType === 'third_party' ? 'active' : ''}`}
-                onClick={() => props.onUpdateDraft({ loginType: 'third_party' })}
-              >
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-                {t('txt_third_party_login')}
-              </button>
-            </div>
-            {props.draft.loginType === 'password' && (
-              <>
-                <label className="field">
-                  <span>{t('txt_username')}</span>
-                  <input className="input" value={props.draft.loginUsername} onInput={(e) => props.onUpdateDraft({ loginUsername: (e.currentTarget as HTMLInputElement).value })} />
-                </label>
-                <label className="field">
-                  <span>{t('txt_password')}</span>
-                  <div className="leading-input-inner">
-                      <input
-                        className="input"
-                        type={showPassword ? 'text' : 'password'}
-                        value={props.draft.loginPassword}
-                        onInput={(e) => props.onUpdateDraft({ loginPassword: (e.currentTarget as HTMLInputElement).value })}
-                      />
-                      <button
-                        type="button"
-                        className="input-icon-btn"
-                        title={t('txt_generate_password')}
-                        aria-label={t('txt_generate_password')}
-                        onClick={openGeneratorDialog}
-                      >
-                        <RefreshCw size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        className={`input-icon-btn ${copied ? 'pw-copied' : ''}`}
-                        title={copied ? t('txt_copied') : t('txt_copy_password')}
-                        aria-label={copied ? t('txt_copied') : t('txt_copy_password')}
-                        onClick={copyPassword}
-                        disabled={!props.draft.loginPassword}
-                      >
-                        {copied ? <CheckCheck size={16} /> : <Copy size={16} />}
-                      </button>
-                      <button
-                        type="button"
-                        className="input-icon-btn"
-                        title={showPassword ? t('txt_hide_password') : t('txt_show_password')}
-                        aria-label={showPassword ? t('txt_hide_password') : t('txt_show_password')}
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                </label>
-                <label className="field">
-                  <span>{t('txt_totp_secret')}</span>
-                  <div className="input-action-wrap">
-                    <input className="input" value={props.draft.loginTotp} onInput={(e) => props.onUpdateDraft({ loginTotp: (e.currentTarget as HTMLInputElement).value })} />
-                    <button
-                      type="button"
-                      className="input-icon-btn"
-                      title={t('txt_scan_totp_qr')}
-                      aria-label={t('txt_scan_totp_qr')}
-                      disabled={props.busy}
-                      onClick={() => {
-                        setTotpQrStatus('');
-                        setTotpQrOpen(true);
-                      }}
-                    >
-                      <QrCode size={18} className="btn-icon" />
-                    </button>
-                  </div>
-                </label>
-              </>
-            )}
-            {props.draft.loginType === 'third_party' && (
-              <>
-                <div className="platform-select-wrap">
-                  <PlatformIcon platform={props.draft.thirdPartyPlatform} />
-                  <select className="input" value={props.draft.thirdPartyPlatform} onInput={(e) => props.onUpdateDraft({ thirdPartyPlatform: (e.currentTarget as HTMLSelectElement).value })}>
-                    <option value="">{t('txt_select_platform')}</option>
-                    <option value="google">Google</option>
-                    <option value="apple">Apple</option>
-                    <option value="facebook">Facebook</option>
-                    <option value="microsoft">Microsoft</option>
-                    <option value="twitter">Twitter (X)</option>
-                    <option value="github">GitHub</option>
-                    <option value="wechat">微信</option>
-                    <option value="alipay">支付宝</option>
-                    <option value="amazon">Amazon</option>
-                    <option value="other">{t('txt_other')}</option>
-                  </select>
+            <label className="field">
+              <span>{t('txt_username')}</span>
+              <input className="input" value={props.draft.loginUsername} onInput={(e) => props.onUpdateDraft({ loginUsername: (e.currentTarget as HTMLInputElement).value })} />
+            </label>
+            <label className="field">
+              <span>{t('txt_password')}</span>
+              <div className="leading-input-inner">
+                  <input
+                    className="input"
+                    type={showPassword ? 'text' : 'password'}
+                    value={props.draft.loginPassword}
+                    onInput={(e) => props.onUpdateDraft({ loginPassword: (e.currentTarget as HTMLInputElement).value })}
+                  />
+                  <button
+                    type="button"
+                    className="input-icon-btn"
+                    title={t('txt_generate_password')}
+                    aria-label={t('txt_generate_password')}
+                    onClick={openGeneratorDialog}
+                  >
+                    <RefreshCw size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className={`input-icon-btn ${copied ? 'pw-copied' : ''}`}
+                    title={copied ? t('txt_copied') : t('txt_copy_password')}
+                    aria-label={copied ? t('txt_copied') : t('txt_copy_password')}
+                    onClick={copyPassword}
+                    disabled={!props.draft.loginPassword}
+                  >
+                    {copied ? <CheckCheck size={16} /> : <Copy size={16} />}
+                  </button>
+                  <button
+                    type="button"
+                    className="input-icon-btn"
+                    title={showPassword ? t('txt_hide_password') : t('txt_show_password')}
+                    aria-label={showPassword ? t('txt_hide_password') : t('txt_show_password')}
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
-                <label className="field">
-                  <span>{t('txt_third_party_account')}</span>
-                  <input className="input" value={props.draft.thirdPartyAccount} placeholder={t('txt_third_party_account_placeholder')} onInput={(e) => props.onUpdateDraft({ thirdPartyAccount: (e.currentTarget as HTMLInputElement).value })} />
-                </label>
-              </>
-            )}
+            </label>
+            <label className="field">
+              <span>{t('txt_totp_secret')}</span>
+              <div className="input-action-wrap">
+                <input className="input" value={props.draft.loginTotp} onInput={(e) => props.onUpdateDraft({ loginTotp: (e.currentTarget as HTMLInputElement).value })} />
+                <button
+                  type="button"
+                  className="input-icon-btn"
+                  title={t('txt_scan_totp_qr')}
+                  aria-label={t('txt_scan_totp_qr')}
+                  disabled={props.busy}
+                  onClick={() => {
+                    setTotpQrStatus('');
+                    setTotpQrOpen(true);
+                  }}
+                >
+                  <QrCode size={18} className="btn-icon" />
+                </button>
+              </div>
+            </label>
             {props.draft.loginFido2Credentials.length > 0 && (
               <>
                 <div className="section-head passkeys-section-head">

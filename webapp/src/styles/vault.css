@@ -691,25 +691,6 @@
   margin-bottom: 0;
 }
 
-/* Platform selector with icon */
-.platform-select-wrap {
-  @apply flex items-center gap-2;
-}
-
-.platform-icon {
-  @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border;
-  background: var(--panel-soft);
-  border-color: var(--line);
-}
-
-.platform-icon svg {
-  @apply h-5 w-5;
-}
-
-.platform-select-wrap select {
-  @apply min-w-0 flex-1;
-}
-
 .detail-title {
   @apply m-0 overflow-hidden text-ellipsis whitespace-nowrap;
   font-size: var(--font-2xl);
@@ -1196,11 +1177,11 @@
 .name-field-row {
   display: flex;
   gap: 12px;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .name-icon-box {
-  @apply flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border;
+  @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border;
   background: var(--panel-soft);
   border-color: var(--line);
   transition: border-color var(--dur-fast) var(--ease-smooth), box-shadow var(--dur-fast) var(--ease-out-soft);
@@ -1249,6 +1230,7 @@
 
 .extra-websites-list {
   margin-top: var(--space-3);
+  margin-bottom: 16px;
 }
 
 .leading-input-inner {
@@ -1318,10 +1300,11 @@
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* Website input is wrapped in input-action-wrap (same style as TOTP QR) */
-.add-website-btn-inline {
-  @apply mt-3;
+/* Website pair — spacing between extra website homepage+login groups */
+.website-pair + .website-pair {
+  margin-top: var(--space-4);
 }
+
 
 /* Password generator dialog */
 .pw-gen-dialog {

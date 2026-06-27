@@ -187,6 +187,7 @@ export interface Cipher {
   decName?: string;
   decNotes?: string;
   decIcon?: string;
+  [key: string]: unknown;
 }
 
 export interface SendTextData {

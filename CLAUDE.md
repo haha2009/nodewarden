@@ -56,6 +56,12 @@ npm run i18n:validate    # 验证 i18n 翻译完整性
 6. **账户/密码** → 安全约束（密码强度限制、哈希、提示限制）
 7. **i18n** → 更新后运行 `npm run i18n:validate`
 
+## Dev Server Workflow
+- `wrangler dev` 从 `./dist/` 提供静态文件，不自动检测 webapp 源码变更
+- 修改 `webapp/src/` 后必须执行：`npm run build` → 重启 `npm run dev` 进程
+- 流程：`pkill -f "nodewarden.*dev"` → `npm run build` → `npm run dev &`
+- 每次改完都要等用户验收，再继续下一步
+
 ## Before Asking Questions
 1. Read CONTRIBUTING.md — 它有详细的敏感区域指南
 2. 搜索现有代码模式，不要重新发明
