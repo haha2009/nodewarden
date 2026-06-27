@@ -391,7 +391,14 @@ export default function VaultEditor(props: VaultEditorProps) {
                 <input
                   className="input"
                   value={props.draft.loginUris[0]?.uri || ''}
-                  onInput={(e) => props.onUpdateDraftLoginUri(0, (e.currentTarget as HTMLInputElement).value)}
+                  onInput={(e) => {
+                    const value = (e.currentTarget as HTMLInputElement).value;
+                    props.onUpdateDraftLoginUri(0, value);
+                    const host = hostFromUri(value);
+                    if (host) {
+                      beginWebsiteIconLoad(host, websiteIconUrl(host));
+                    }
+                  }}
                   placeholder="https://example.com"
                 />
                 <button

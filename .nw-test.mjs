@@ -22,46 +22,67 @@ async function main() {
   page.on('pageerror', e => consoleErrors.push(e.message));
   async function shot(n) { await page.screenshot({ path: '/Users/claw/Projects/nodewarden/.test-screenshot-' + n + '.png' }); }
   try {
-    // 1) Get token via API
-    console.log('--- Getting auth token ---');
+    console.log('--- Auth ---');
     const token = await getToken();
-    console.log('Got token, length:', token.access_token.length);
-    // 2) Navigate to origin first (not about:blank) to set localStorage
-    await page.goto(BASE + '/login', { waitUntil: 'domcontentloaded', timeout: 10000 });
-    await page.waitForTimeout(1000);
-    // 3) Inject session into localStorage
-    await page.evaluate(({ accessToken, refreshToken, email }) => {
+    console.log('Token obtained');
+    // Navigate to origin and inject session
+    await page.goto(BASE + '/', { waitUntil: 'load', timeout: 15000 });
+    await page.evaluate(({ at, rt, em }) => {
       localStorage.setItem('nodewarden.web.session.v4', JSON.stringify({
-        accessToken, refreshToken, email, authMode: 'web-cookie'
+        accessToken: at, refreshToken: rt, email: em, authMode: 'token'
       }));
-    }, { accessToken: token.access_token, refreshToken: token.refresh_token, email: 'test@test.com' });
-    // 4) Navigate to vault
-    await page.goto(VAULT, { waitUntil: 'domcontentloaded', timeout: 10000 });
-    await page.waitForTimeout(5000);
+    }, { at: token.access_token, rt: token.refresh_token, em: 'test@test.com' });
+    // Navigate to vault
+    await page.goto(VAULT, { waitUntil: 'load', timeout: 15000 });
+    // Wait for the app to fully initialize
+    await page.waitForTimeout(10000);
     await shot('00-vault');
-    const isVault = await page.evaluate(() => !!document.querySelector('.vault-grid, .sidebar, .list-panel, .vault-list, .editor-panel'));
-    console.log('On vault:', isVault);
-    if (!isVault) {
-      const bodyText = await page.evaluate(() => document.body.innerText.substring(0, 500));
-      console.log('Page:', bodyText?.substring(0, 300));
+    const pageInfo = await page.evaluate(() => {
+      return {
+        url: window.location.href,
+        text: document.body.innerText.substring(0, 400),
+        hasUnlock: !!document.querySelector('input[placeholder*="主密码"], input[placeholder*="unlock"], input[placeholder*="Unlock"]'),
+        hasLogin: !!Array.from(document.querySelectorAll('button')).some(b => b.textContent.includes('登录')),
+        hasVault: !!document.querySelector('.vault-grid, .sidebar, .list-panel, .vault-list, .editor-panel'),
+        allButtons: Array.from(document.querySelectorAll('button')).map(b => b.textContent?.trim()).filter(Boolean).slice(0, 10)
+      };
+    });
+    console.log('Page info:', JSON.stringify(pageInfo, null, 2));
+    // If we see unlock screen, enter password
+    if (pageInfo.hasUnlock && !pageInfo.hasVault) {
+      console.log('On unlock screen, entering password...');
+      await page.evaluate(() => {
+        const inputs = document.querySelectorAll('input[type="password"]');
+        for (const inp of inputs) { if (inp.offsetParent !== null) { inp.value = 'test123'; inp.dispatchEvent(new Event('input', { bubbles: true })); } }
+        const btns = document.querySelectorAll('button');
+        for (const b of btns) { const t = b.textContent?.trim(); if (t === 'Unlock' || t === '解锁' || t === '登录') { b.click(); return; } }
+      });
       await page.waitForTimeout(5000);
-      const isVault2 = await page.evaluate(() => !!document.querySelector('.vault-grid, .sidebar, .list-panel, .vault-list, .editor-panel'));
-      if (!isVault2) throw new Error('Cannot access vault');
+      await shot('00-unlock');
+    }
+    const onVault = await page.evaluate(() => {
+      const txt = document.body.innerText;
+      return txt.includes('新增') || txt.includes('New') || txt.includes('All Items') || txt.includes('全部') || !!document.querySelector('.vault-list, .vault-grid, .sidebar');
+    });
+    console.log('On vault:', onVault);
+    if (!onVault) {
+      const bodyText = await page.evaluate(() => document.body.innerText.substring(0, 300));
+      throw new Error('Not on vault: ' + bodyText);
     }
     // T1: Default State
-    console.log('\n=== T1: Default State ===');
+    console.log('\n=== T1 ===');
     await page.evaluate(() => {
-      const btns = document.querySelectorAll('button, div, span');
-      for (const b of btns) { const t = b.textContent?.trim(); if (t === 'New' || t === '新增' || t === '+') { b.click(); return; } }
+      const btns = document.querySelectorAll('button');
+      for (const b of btns) { const al = b.getAttribute('aria-label') || ''; if (al === 'txt_add' || al === 'New' || al === '新增') { b.click(); return; } }
     });
     await page.waitForTimeout(1000); await shot('01-menu');
     await page.evaluate(() => {
-      const items = document.querySelectorAll('.create-menu-item, li, div, span, a');
-      for (const el of items) { if (el.textContent?.trim() === 'Login' || el.textContent?.trim() === '登录') { el.click(); return; } }
+      const items = document.querySelectorAll('.create-menu-item');
+      for (const el of items) { if (el.textContent.includes('Login') || el.textContent.includes('登录')) { el.click(); return; } }
     });
     await page.waitForTimeout(2000); await shot('01-form');
-    const labels = await page.evaluate(() => Array.from(document.querySelectorAll('label, .field > span, .field-label, .input-label')).map(e => e.textContent?.trim()).filter(Boolean));
-    console.log('Form labels:', labels);
+    const labels = await page.evaluate(() => Array.from(document.querySelectorAll('label, .field>span, .website-label')).map(e => e.textContent?.trim()).filter(Boolean));
+    console.log('Labels:', labels);
     r('T1: Homepage visible', labels.some(l => l.includes('Homepage') || l.includes('网站主页')));
     r('T1: Login Page visible', labels.some(l => l.includes('Login Page') || l.includes('登录页面')));
     r('T1: Add Website visible', labels.some(l => l.includes('Add Website') || l.includes('添加网站')));
@@ -75,15 +96,15 @@ async function main() {
     });
     await page.waitForTimeout(2000); r('T1: Save empty URIs', true);
     // T2: Full Fill
-    console.log('\n=== T2: Full Fill ===');
+    console.log('\n=== T2 ===');
     await page.evaluate(() => {
-      const btns = document.querySelectorAll('button, div, span');
-      for (const b of btns) { const t = b.textContent?.trim(); if (t === 'New' || t === '新增' || t === '+') { b.click(); return; } }
+      const btns = document.querySelectorAll('button');
+      for (const b of btns) { const al = b.getAttribute('aria-label') || ''; if (al === 'txt_add' || al === 'New' || al === '新增') { b.click(); return; } }
     });
     await page.waitForTimeout(1000);
     await page.evaluate(() => {
-      const items = document.querySelectorAll('.create-menu-item, li, div, span');
-      for (const el of items) { if (el.textContent?.trim() === 'Login' || el.textContent?.trim() === '登录') { el.click(); return; } }
+      const items = document.querySelectorAll('.create-menu-item');
+      for (const el of items) { if (el.textContent.includes('Login') || el.textContent.includes('登录')) { el.click(); return; } }
     });
     await page.waitForTimeout(2000);
     await page.evaluate(() => {
@@ -105,12 +126,12 @@ async function main() {
       for (const el of items) { if (el.textContent?.trim() === 'Test Example') { el.click(); return; } }
     });
     await page.waitForTimeout(2000); await shot('02-detail');
-    const detailText = await page.evaluate(() => document.body.innerText);
-    r('T2: Homepage in detail', detailText.includes('https://example.com'));
-    r('T2: Login page in detail', detailText.includes('https://example.com/login'));
+    const dt = await page.evaluate(() => document.body.innerText);
+    r('T2: Homepage in detail', dt.includes('https://example.com'));
+    r('T2: Login page in detail', dt.includes('https://example.com/login'));
     await page.goBack(); await page.waitForTimeout(1000);
     // T3: Add Website
-    console.log('\n=== T3: Add Website ===');
+    console.log('\n=== T3 ===');
     await page.evaluate(() => {
       const items = document.querySelectorAll('span, div, a');
       for (const el of items) { if (el.textContent?.trim() === 'Test Example') { el.click(); break; } }
@@ -161,7 +182,7 @@ async function main() {
     const rm = await page.evaluate(() => document.querySelectorAll('input[placeholder*="example.com"], input[placeholder*="URL"]').length);
     r('T3: 2 inputs after remove', rm <= 2, 'found ' + rm);
     // T4
-    console.log('\n=== T4: Old Data ===');
+    console.log('\n=== T4 ===');
     await page.evaluate(() => {
       const btns = document.querySelectorAll('button');
       for (const b of btns) { if (b.textContent?.trim() === 'Cancel' || b.textContent?.trim() === '取消') { b.click(); return; } }
@@ -170,15 +191,15 @@ async function main() {
     const listText = await page.evaluate(() => document.body.innerText.substring(0, 500));
     r('T4: List loads', listText.length > 100);
     // T5: AI
-    console.log('\n=== T5: AI Auto-fill ===');
+    console.log('\n=== T5 ===');
     await page.evaluate(() => {
-      const btns = document.querySelectorAll('button, div, span');
-      for (const b of btns) { const t = b.textContent?.trim(); if (t === 'New' || t === '新增' || t === '+') { b.click(); return; } }
+      const btns = document.querySelectorAll('button');
+      for (const b of btns) { const al = b.getAttribute('aria-label') || ''; if (al === 'txt_add' || al === 'New' || al === '新增') { b.click(); return; } }
     });
     await page.waitForTimeout(1000);
     await page.evaluate(() => {
-      const items = document.querySelectorAll('.create-menu-item, li, div, span');
-      for (const el of items) { if (el.textContent?.trim() === 'Login' || el.textContent?.trim() === '登录') { el.click(); return; } }
+      const items = document.querySelectorAll('.create-menu-item');
+      for (const el of items) { if (el.textContent.includes('Login') || el.textContent.includes('登录')) { el.click(); return; } }
     });
     await page.waitForTimeout(2000);
     await page.evaluate(() => {
@@ -211,21 +232,21 @@ async function main() {
     });
     r('T5: Name=GitHub', nmVal && nmVal.includes('GitHub'), 'name=' + nmVal);
     // T6: Edge cases
-    console.log('\n=== T6: Edge Cases ===');
+    console.log('\n=== T6 ===');
     await page.evaluate(() => {
       const btns = document.querySelectorAll('button');
       for (const b of btns) { if (b.textContent?.trim() === 'Cancel' || b.textContent?.trim() === '取消') { b.click(); return; } }
     });
     await page.waitForTimeout(1000);
-    // Same URL
+    // 6a: Same URL
     await page.evaluate(() => {
-      const btns = document.querySelectorAll('button, div, span');
-      for (const b of btns) { const t = b.textContent?.trim(); if (t === 'New' || t === '新增' || t === '+') { b.click(); return; } }
+      const btns = document.querySelectorAll('button');
+      for (const b of btns) { const al = b.getAttribute('aria-label') || ''; if (al === 'txt_add' || al === 'New' || al === '新增') { b.click(); return; } }
     });
     await page.waitForTimeout(1000);
     await page.evaluate(() => {
-      const items = document.querySelectorAll('.create-menu-item, li, div, span');
-      for (const el of items) { if (el.textContent?.trim() === 'Login' || el.textContent?.trim() === '登录') { el.click(); return; } }
+      const items = document.querySelectorAll('.create-menu-item');
+      for (const el of items) { if (el.textContent.includes('Login') || el.textContent.includes('登录')) { el.click(); return; } }
     });
     await page.waitForTimeout(2000);
     await page.evaluate(() => {
@@ -249,15 +270,15 @@ async function main() {
     const sc = (sd.match(/https:\/\/same\.com/g) || []).length;
     r('T6a: Dedup to 1', sc <= 1, 'count=' + sc);
     await page.goBack(); await page.waitForTimeout(1000);
-    // Empty homepage + login only
+    // 6b: Empty homepage + login only
     await page.evaluate(() => {
-      const btns = document.querySelectorAll('button, div, span');
-      for (const b of btns) { const t = b.textContent?.trim(); if (t === 'New' || t === '新增' || t === '+') { b.click(); return; } }
+      const btns = document.querySelectorAll('button');
+      for (const b of btns) { const al = b.getAttribute('aria-label') || ''; if (al === 'txt_add' || al === 'New' || al === '新增') { b.click(); return; } }
     });
     await page.waitForTimeout(1000);
     await page.evaluate(() => {
-      const items = document.querySelectorAll('.create-menu-item, li, div, span');
-      for (const el of items) { if (el.textContent?.trim() === 'Login' || el.textContent?.trim() === '登录') { el.click(); return; } }
+      const items = document.querySelectorAll('.create-menu-item');
+      for (const el of items) { if (el.textContent.includes('Login') || el.textContent.includes('登录')) { el.click(); return; } }
     });
     await page.waitForTimeout(2000);
     await page.evaluate(() => {
@@ -271,20 +292,20 @@ async function main() {
       for (const b of btns) { const t = b.textContent?.trim(); if (t === 'Save' || t === 'Confirm' || t === '保存' || t === '确认') { b.click(); return; } }
     });
     await page.waitForTimeout(2000); r('T6b: Empty homepage + login', true);
-    // Empty additional pair
+    // 6c: Empty additional pair
     await page.evaluate(() => {
       const btns = document.querySelectorAll('button');
       for (const b of btns) { if (b.textContent?.trim() === 'Cancel' || b.textContent?.trim() === '取消') { b.click(); return; } }
     });
     await page.waitForTimeout(1000);
     await page.evaluate(() => {
-      const btns = document.querySelectorAll('button, div, span');
-      for (const b of btns) { const t = b.textContent?.trim(); if (t === 'New' || t === '新增' || t === '+') { b.click(); return; } }
+      const btns = document.querySelectorAll('button');
+      for (const b of btns) { const al = b.getAttribute('aria-label') || ''; if (al === 'txt_add' || al === 'New' || al === '新增') { b.click(); return; } }
     });
     await page.waitForTimeout(1000);
     await page.evaluate(() => {
-      const items = document.querySelectorAll('.create-menu-item, li, div, span');
-      for (const el of items) { if (el.textContent?.trim() === 'Login' || el.textContent?.trim() === '登录') { el.click(); return; } }
+      const items = document.querySelectorAll('.create-menu-item');
+      for (const el of items) { if (el.textContent.includes('Login') || el.textContent.includes('登录')) { el.click(); return; } }
     });
     await page.waitForTimeout(2000);
     await page.evaluate(() => {
