@@ -10,6 +10,7 @@ import {
   CARD_BRAND_OPTIONS,
   CardBrandIcon,
   CreateTypeIcon,
+  PlatformIcon,
   cipherTypeLabel,
   firstCipherUri,
   formatAttachmentSize,
@@ -441,7 +442,29 @@ export default function VaultEditor(props: VaultEditorProps) {
             </div>
           </div>
         </div>
+        {/* Login type selector: password login or third-party login */}
         {props.draft.type === 1 && (
+          <div className="segmented-control">
+            <button
+              type="button"
+              className={`segmented-btn ${props.draft.loginType === 'password' ? 'active' : ''}`}
+              onClick={() => props.onUpdateDraft({ loginType: 'password' })}
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+              {t('txt_password_login')}
+            </button>
+            <button
+              type="button"
+              className={`segmented-btn ${props.draft.loginType === 'third_party' ? 'active' : ''}`}
+              onClick={() => props.onUpdateDraft({ loginType: 'third_party' })}
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+              {t('txt_third_party_login')}
+            </button>
+          </div>
+        )}
+        {/* Password login fields */}
+        {props.draft.type === 1 && props.draft.loginType === 'password' && (
           <>
             <label className="field">
               <span>{t('txt_username')}</span>
@@ -486,6 +509,37 @@ export default function VaultEditor(props: VaultEditorProps) {
                   </button>
                 </div>
             </label>
+          </>
+        )}
+        {/* Third-party login fields */}
+        {props.draft.type === 1 && props.draft.loginType === 'third_party' && (
+          <>
+            <div className="platform-select-wrap">
+              <PlatformIcon platform={props.draft.thirdPartyPlatform} />
+              <select className="input" value={props.draft.thirdPartyPlatform} onInput={(e) => props.onUpdateDraft({ thirdPartyPlatform: (e.currentTarget as HTMLSelectElement).value })}>
+                <option value="">{t('txt_select_platform')}</option>
+                <option value="google">Google</option>
+                <option value="apple">Apple</option>
+                <option value="microsoft">Microsoft</option>
+                <option value="twitter">Twitter / X</option>
+                <option value="facebook">Facebook</option>
+                <option value="github">GitHub</option>
+                <option value="discord">Discord</option>
+                <option value="telegram">Telegram</option>
+                <option value="wechat">WeChat</option>
+                <option value="qq">QQ</option>
+                <option value="weibo">Weibo</option>
+              </select>
+            </div>
+            <label className="field">
+              <span>{t('txt_third_party_account')}</span>
+              <input className="input" value={props.draft.thirdPartyAccount} onInput={(e) => props.onUpdateDraft({ thirdPartyAccount: (e.currentTarget as HTMLInputElement).value })} placeholder={t('txt_third_party_account_placeholder')} />
+            </label>
+          </>
+        )}
+        {/* Common login fields for both types */}
+        {props.draft.type === 1 && (
+          <>
             <label className="field">
               <span>{t('txt_totp_secret')}</span>
               <div className="input-action-wrap">
