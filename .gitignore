@@ -41,6 +41,10 @@ npm-debug.log*
 
 tmp/
 .tmp/
+
+# Test artifacts
+.test-*
+.nw-test*
 .tmp-bitwarden-clients/
 
 nodewarden.wiki/
