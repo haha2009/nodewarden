@@ -98,6 +98,17 @@ input[type='file'].input::file-selector-button:hover {
   @apply pr-12;
 }
 
+.platform-select-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.platform-select-row .input {
+  flex: 1;
+}
+
 .input-icon-btn {
   @apply absolute right-2 top-1/2 grid h-8 w-8 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-slate-700 transition;
   transform: translateY(-50%);

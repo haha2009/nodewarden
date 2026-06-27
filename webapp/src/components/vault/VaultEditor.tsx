@@ -513,29 +513,23 @@ export default function VaultEditor(props: VaultEditorProps) {
         )}
         {/* Third-party login fields */}
         {props.draft.type === 1 && props.draft.loginType === 'third_party' && (
-          <>
-            <div className="platform-select-wrap">
-              <PlatformIcon platform={props.draft.thirdPartyPlatform} />
-              <select className="input" value={props.draft.thirdPartyPlatform} onInput={(e) => props.onUpdateDraft({ thirdPartyPlatform: (e.currentTarget as HTMLSelectElement).value })}>
-                <option value="">{t('txt_select_platform')}</option>
-                <option value="google">Google</option>
-                <option value="apple">Apple</option>
-                <option value="microsoft">Microsoft</option>
-                <option value="twitter">Twitter / X</option>
-                <option value="facebook">Facebook</option>
-                <option value="github">GitHub</option>
-                <option value="discord">Discord</option>
-                <option value="telegram">Telegram</option>
-                <option value="wechat">WeChat</option>
-                <option value="qq">QQ</option>
-                <option value="weibo">Weibo</option>
-              </select>
-            </div>
-            <label className="field">
-              <span>{t('txt_third_party_account')}</span>
-              <input className="input" value={props.draft.thirdPartyAccount} onInput={(e) => props.onUpdateDraft({ thirdPartyAccount: (e.currentTarget as HTMLInputElement).value })} placeholder={t('txt_third_party_account_placeholder')} />
-            </label>
-          </>
+          <div className="platform-select-row">
+            <PlatformIcon platform={props.draft.thirdPartyPlatform} />
+            <select className="input" value={props.draft.thirdPartyPlatform} onInput={(e) => props.onUpdateDraft({ thirdPartyPlatform: (e.currentTarget as HTMLSelectElement).value })}>
+              <option value="">{t('txt_select_platform')}</option>
+              <option value="google">Google</option>
+              <option value="apple">Apple</option>
+              <option value="microsoft">Microsoft</option>
+              <option value="twitter">Twitter / X</option>
+              <option value="facebook">Facebook</option>
+              <option value="github">GitHub</option>
+              <option value="discord">Discord</option>
+              <option value="telegram">Telegram</option>
+              <option value="wechat">WeChat</option>
+              <option value="qq">QQ</option>
+              <option value="weibo">Weibo</option>
+            </select>
+          </div>
         )}
         {/* Common login fields for both types */}
         {props.draft.type === 1 && (
