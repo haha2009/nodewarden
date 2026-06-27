@@ -19,8 +19,18 @@ export function hostFromUri(uri: string): string {
   }
 }
 
+function isPrivateHost(host: string): boolean {
+  if (host === 'localhost' || host === '0.0.0.0') return true;
+  if (/^127\./.test(host)) return true;
+  if (/^10\./.test(host)) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(host)) return true;
+  if (/^192\.168\./.test(host)) return true;
+  if (host === '::1' || host === '[::1]') return true;
+  return false;
+}
+
 export function websiteIconUrl(host: string, uri?: string): string {
-  if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0') {
+  if (isPrivateHost(host)) {
     const origin = uri ? originFromUri(uri) : `http://${host}`;
     return `${origin}/favicon.ico`;
   }
