@@ -1,7 +1,7 @@
 import type { RefObject } from 'preact';
 import { createPortal } from 'preact/compat';
 import { ArrowDown, ArrowUp, CheckCheck, Copy, Download, Eye, EyeOff, Paperclip, Plus, QrCode, RefreshCw, Sparkles, Star, StarOff, Trash2, Upload, X } from 'lucide-preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { useDialogLifecycle } from '@/components/ConfirmDialog';
 import type { Cipher, Folder, VaultDraft, VaultDraftField } from '@/lib/types';
 import { t } from '@/lib/i18n';
@@ -331,7 +331,14 @@ export default function VaultEditor(props: VaultEditorProps) {
     }
   };
 
-  const isPasswordEmpty = () => props.draft.type === 1 && props.draft.loginType === 'password' && !props.draft.loginPassword;
+  const saveDisabled = props.busy || !props.draft.name.trim();
+
+  const iconCipher = useMemo(() => {
+    if (props.selectedCipher) return props.selectedCipher;
+    const uri = props.draft.loginUris[0]?.uri?.trim();
+    if (!uri) return null;
+    return { id: 'new', type: props.draft.type, login: { uris: [{ uri }] } } as Cipher;
+  }, [props.selectedCipher, props.draft.loginUris, props.draft.type]);
 
   return (
     <>
@@ -419,9 +426,9 @@ export default function VaultEditor(props: VaultEditorProps) {
             <div className="name-field-icon-col">
               <span className="name-field-label">{t('txt_logo')}</span>
               <span className="name-icon-box" aria-hidden="true" onClick={props.isCreating ? handleIconUpload : undefined}>
-                {props.selectedCipher ? (
+                {iconCipher ? (
                   <WebsiteIcon
-                    cipher={props.selectedCipher}
+                    cipher={iconCipher}
                     customIcon={props.draft.customIcon || undefined}
                     editable={false}
                     onClick={handleIconClick}
@@ -956,7 +963,7 @@ export default function VaultEditor(props: VaultEditorProps) {
 
       <div className="detail-actions">
         <div className="actions">
-          <button type="button" className="btn btn-primary" disabled={props.busy || isPasswordEmpty()} onClick={props.onSave}>
+          <button type="button" className="btn btn-primary" disabled={saveDisabled} onClick={props.onSave}>
             {props.busy ? <span className="btn-spinner" /> : <CheckCheck size={14} className="btn-icon" />}
             {props.busy ? t('txt_saving') : t('txt_confirm')}
           </button>
