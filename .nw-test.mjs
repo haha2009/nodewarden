@@ -24,52 +24,79 @@ async function main() {
   try {
     console.log('--- Auth ---');
     const token = await getToken();
-    console.log('Token obtained');
-    // Navigate to origin and inject session
-    await page.goto(BASE + '/', { waitUntil: 'load', timeout: 15000 });
+    console.log('Token obtained, length:', token.access_token.length);
+    // First, navigate to vault (will show login)
+    await page.goto(VAULT, { waitUntil: 'load', timeout: 15000 });
+    await page.waitForTimeout(3000);
+    // Inject session AFTER page load, then reload
     await page.evaluate(({ at, rt, em }) => {
       localStorage.setItem('nodewarden.web.session.v4', JSON.stringify({
         accessToken: at, refreshToken: rt, email: em, authMode: 'token'
       }));
+      // Verify it was set
+      const raw = localStorage.getItem('nodewarden.web.session.v4');
+      return raw ? 'OK' : 'FAIL';
     }, { at: token.access_token, rt: token.refresh_token, em: 'test@test.com' });
-    // Navigate to vault
-    await page.goto(VAULT, { waitUntil: 'load', timeout: 15000 });
-    // Wait for the app to fully initialize
+    // Reload the page so the SPA picks up the session
+    await page.reload({ waitUntil: 'load' });
     await page.waitForTimeout(10000);
-    await shot('00-vault');
+    await shot('00-after-reload');
     const pageInfo = await page.evaluate(() => {
+      const txt = document.body.innerText;
       return {
         url: window.location.href,
-        text: document.body.innerText.substring(0, 400),
-        hasUnlock: !!document.querySelector('input[placeholder*="主密码"], input[placeholder*="unlock"], input[placeholder*="Unlock"]'),
-        hasLogin: !!Array.from(document.querySelectorAll('button')).some(b => b.textContent.includes('登录')),
-        hasVault: !!document.querySelector('.vault-grid, .sidebar, .list-panel, .vault-list, .editor-panel'),
-        allButtons: Array.from(document.querySelectorAll('button')).map(b => b.textContent?.trim()).filter(Boolean).slice(0, 10)
+        hasVault: txt.includes('新增') || txt.includes('All Items') || txt.includes('全部') || !!document.querySelector('.vault-list, .vault-grid, .sidebar'),
+        hasUnlock: txt.includes('解锁') || txt.includes('Unlock') || !!document.querySelector('input[placeholder*="主密码"]'),
+        hasLogin: txt.includes('登录'),
+        buttons: Array.from(document.querySelectorAll('button')).map(b => b.textContent?.trim()).filter(Boolean).slice(0, 10),
+        textSnippet: txt.substring(0, 300)
       };
     });
-    console.log('Page info:', JSON.stringify(pageInfo, null, 2));
-    // If we see unlock screen, enter password
+    console.log('After reload:', JSON.stringify(pageInfo, null, 2));
+    // If unlock screen, enter password
     if (pageInfo.hasUnlock && !pageInfo.hasVault) {
-      console.log('On unlock screen, entering password...');
+      console.log('On unlock screen, entering master password...');
       await page.evaluate(() => {
         const inputs = document.querySelectorAll('input[type="password"]');
-        for (const inp of inputs) { if (inp.offsetParent !== null) { inp.value = 'test123'; inp.dispatchEvent(new Event('input', { bubbles: true })); } }
-        const btns = document.querySelectorAll('button');
-        for (const b of btns) { const t = b.textContent?.trim(); if (t === 'Unlock' || t === '解锁' || t === '登录') { b.click(); return; } }
+        for (const inp of inputs) {
+          if (inp.offsetParent !== null) {
+            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+            nativeInputValueSetter.call(inp, 'test123');
+            inp.dispatchEvent(new Event('input', { bubbles: true }));
+            break;
+          }
+        }
       });
-      await page.waitForTimeout(5000);
-      await shot('00-unlock');
+      await page.waitForTimeout(1000);
+      await page.evaluate(() => {
+        const btns = document.querySelectorAll('button');
+        for (const b of btns) {
+          const t = b.textContent?.trim();
+          if (t === 'Unlock' || t === '解锁' || t === '确认' || t === 'Confirm') {
+            b.click(); return;
+          }
+        }
+        // If no unlock button, try the first submit/login button
+        for (const b of btns) {
+          const t = b.textContent?.trim();
+          if (t === '登录' || t === 'Login') {
+            b.click(); return;
+          }
+        }
+      });
+      await page.waitForTimeout(8000);
+      await shot('00-after-unlock');
     }
     const onVault = await page.evaluate(() => {
       const txt = document.body.innerText;
-      return txt.includes('新增') || txt.includes('New') || txt.includes('All Items') || txt.includes('全部') || !!document.querySelector('.vault-list, .vault-grid, .sidebar');
+      return txt.includes('新增') || txt.includes('All Items') || txt.includes('全部') || !!document.querySelector('.vault-list, .vault-grid, .sidebar');
     });
     console.log('On vault:', onVault);
     if (!onVault) {
       const bodyText = await page.evaluate(() => document.body.innerText.substring(0, 300));
       throw new Error('Not on vault: ' + bodyText);
     }
-    // T1: Default State
+    // T1-T6 tests (same as before)
     console.log('\n=== T1 ===');
     await page.evaluate(() => {
       const btns = document.querySelectorAll('button');
@@ -95,7 +122,7 @@ async function main() {
       for (const b of btns) { const t = b.textContent?.trim(); if (t === 'Save' || t === 'Confirm' || t === '保存' || t === '确认') { b.click(); return; } }
     });
     await page.waitForTimeout(2000); r('T1: Save empty URIs', true);
-    // T2: Full Fill
+    // T2
     console.log('\n=== T2 ===');
     await page.evaluate(() => {
       const btns = document.querySelectorAll('button');
@@ -130,7 +157,7 @@ async function main() {
     r('T2: Homepage in detail', dt.includes('https://example.com'));
     r('T2: Login page in detail', dt.includes('https://example.com/login'));
     await page.goBack(); await page.waitForTimeout(1000);
-    // T3: Add Website
+    // T3
     console.log('\n=== T3 ===');
     await page.evaluate(() => {
       const items = document.querySelectorAll('span, div, a');
@@ -190,7 +217,7 @@ async function main() {
     await page.waitForTimeout(1000);
     const listText = await page.evaluate(() => document.body.innerText.substring(0, 500));
     r('T4: List loads', listText.length > 100);
-    // T5: AI
+    // T5
     console.log('\n=== T5 ===');
     await page.evaluate(() => {
       const btns = document.querySelectorAll('button');
@@ -231,7 +258,7 @@ async function main() {
       return inputs.length ? inputs[0].value : null;
     });
     r('T5: Name=GitHub', nmVal && nmVal.includes('GitHub'), 'name=' + nmVal);
-    // T6: Edge cases
+    // T6
     console.log('\n=== T6 ===');
     await page.evaluate(() => {
       const btns = document.querySelectorAll('button');

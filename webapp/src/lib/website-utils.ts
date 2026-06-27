@@ -19,6 +19,20 @@ export function hostFromUri(uri: string): string {
   }
 }
 
-export function websiteIconUrl(host: string): string {
+export function websiteIconUrl(host: string, uri?: string): string {
+  if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0') {
+    const origin = uri ? originFromUri(uri) : `http://${host}`;
+    return `${origin}/favicon.ico`;
+  }
   return `/icons/${encodeURIComponent(host)}/icon.png?fallback=404`;
+}
+
+export function originFromUri(uri: string): string {
+  if (!uri.trim()) return '';
+  try {
+    const normalized = /^https?:\/\//i.test(uri) ? uri : `https://${uri}`;
+    return new URL(normalized).origin;
+  } catch {
+    return '';
+  }
 }

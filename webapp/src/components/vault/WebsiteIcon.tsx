@@ -25,8 +25,9 @@ interface WebsiteIconProps {
 }
 
 export default function WebsiteIcon(props: WebsiteIconProps) {
-  const host = useMemo(() => hostFromUri(firstCipherUri(props.cipher)), [props.cipher]);
-  const src = host ? websiteIconUrl(host) : '';
+  const firstUri = useMemo(() => firstCipherUri(props.cipher), [props.cipher]);
+  const host = useMemo(() => hostFromUri(firstUri), [firstUri]);
+  const src = host ? websiteIconUrl(host, firstUri) : '';
   const nodeRef = useRef<HTMLSpanElement | null>(null);
   const [shouldLoad, setShouldLoad] = useState(() => (host ? getWebsiteIconStatus(host) === 'loaded' : true));
   const [status, setStatus] = useState(() => (host ? getWebsiteIconStatus(host) : 'idle'));

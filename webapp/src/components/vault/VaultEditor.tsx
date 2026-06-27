@@ -323,7 +323,7 @@ export default function VaultEditor(props: VaultEditorProps) {
       // Also trigger website favicon load
       const host = hostFromUri(firstUri);
       if (host) {
-        const iconSrc = websiteIconUrl(host);
+        const iconSrc = websiteIconUrl(host, firstUri);
         beginWebsiteIconLoad(host, iconSrc);
       }
       setAiDetected(true);
@@ -396,7 +396,7 @@ export default function VaultEditor(props: VaultEditorProps) {
                     props.onUpdateDraftLoginUri(0, value);
                     const host = hostFromUri(value);
                     if (host) {
-                      beginWebsiteIconLoad(host, websiteIconUrl(host));
+                      beginWebsiteIconLoad(host, websiteIconUrl(host, value));
                     }
                   }}
                   placeholder="https://example.com"
