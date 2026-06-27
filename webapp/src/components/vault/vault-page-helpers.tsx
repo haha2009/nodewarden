@@ -621,9 +621,11 @@ export function draftFromCipher(cipher: Cipher): VaultDraft {
       ? cipher.login.fido2Credentials.map((credential) => ({ ...credential }))
       : [];
     draft.customIcon = cipher.decIcon || '';
-    draft.loginType = (cipher.login as Record<string, string>).decLoginType === 'third_party' ? 'third_party' : 'password';
-    draft.thirdPartyPlatform = (cipher.login as Record<string, string>).decThirdPartyPlatform || '';
+    const decLoginType = (cipher.login as Record<string, string>).decLoginType;
+    const decThirdPartyPlatform = (cipher.login as Record<string, string>).decThirdPartyPlatform || '';
+    draft.thirdPartyPlatform = decThirdPartyPlatform;
     draft.thirdPartyAccount = (cipher.login as Record<string, string>).decThirdPartyAccount || '';
+    draft.loginType = decLoginType === 'third_party' || (decLoginType !== 'password' && !!decThirdPartyPlatform) ? 'third_party' : 'password';
     if (!draft.loginUris.length) draft.loginUris = [createEmptyLoginUri()];
   }
   if (cipher.card) {

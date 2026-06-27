@@ -581,9 +581,11 @@ function draftFromDecryptedCipher(cipher: Cipher): VaultDraft {
     draft.loginUsername = plainCipherValue(cipher.login.decUsername, cipher.login.username);
     draft.loginPassword = plainCipherValue(cipher.login.decPassword, cipher.login.password);
     draft.loginTotp = plainCipherValue(cipher.login.decTotp, cipher.login.totp);
-    draft.loginType = (cipher.login as Record<string, string>).decLoginType === 'third_party' ? 'third_party' : 'password';
-    draft.thirdPartyPlatform = (cipher.login as Record<string, string>).decThirdPartyPlatform || '';
+    const decLoginType = (cipher.login as Record<string, string>).decLoginType;
+    const decThirdPartyPlatform = (cipher.login as Record<string, string>).decThirdPartyPlatform || '';
+    draft.thirdPartyPlatform = decThirdPartyPlatform;
     draft.thirdPartyAccount = (cipher.login as Record<string, string>).decThirdPartyAccount || '';
+    draft.loginType = decLoginType === 'third_party' || (decLoginType !== 'password' && !!decThirdPartyPlatform) ? 'third_party' : 'password';
     draft.loginFido2Credentials = Array.isArray(cipher.login.fido2Credentials)
       ? cipher.login.fido2Credentials.filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
       : [];
