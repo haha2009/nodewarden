@@ -1169,6 +1169,70 @@ const folderName = useCallback((id: string | null | undefined): string => {
                 onPatchDraftCustomField={patchDraftCustomField}
                 onUpdateDraftCustomFields={updateDraftCustomFields}
                 onOpenFieldModal={() => setFieldModalOpen(true)}
+                onUpdateGroups={(groups) => updateDraft({ groups } as Partial<VaultDraft>)}
+                onAddGroup={() => {
+                  const groups = draft.groups || [];
+                  updateDraft({ groups: [...groups, { id: crypto.randomUUID(), name: '', description: '', logins: [{ id: crypto.randomUUID(), loginType: 'password', username: '', password: '', totp: '', fido2Credentials: [], thirdPartyPlatform: '', thirdPartyAccount: '' }], customFields: [], attachments: [], removedAttachmentIds: {} }] } as Partial<VaultDraft>);
+                }}
+                onRemoveGroup={(groupIndex) => {
+                  const groups = draft.groups || [];
+                  updateDraft({ groups: groups.filter((_, i) => i !== groupIndex) } as Partial<VaultDraft>);
+                }}
+                onAddGroupLogin={(groupIndex, loginType) => {
+                  const groups = draft.groups || [];
+                  const newGroups = [...groups];
+                  newGroups[groupIndex] = {
+                    ...newGroups[groupIndex],
+                    logins: [...newGroups[groupIndex].logins, { id: crypto.randomUUID(), loginType, username: '', password: '', totp: '', fido2Credentials: [], thirdPartyPlatform: '', thirdPartyAccount: '' }],
+                  };
+                  updateDraft({ groups: newGroups } as Partial<VaultDraft>);
+                }}
+                onRemoveGroupLogin={(groupIndex, loginIndex) => {
+                  const groups = draft.groups || [];
+                  const newGroups = [...groups];
+                  newGroups[groupIndex] = {
+                    ...newGroups[groupIndex],
+                    logins: newGroups[groupIndex].logins.filter((_, i) => i !== loginIndex),
+                  };
+                  updateDraft({ groups: newGroups } as Partial<VaultDraft>);
+                }}
+                onUpdateGroupLogin={(groupIndex, loginIndex, patch) => {
+                  const groups = draft.groups || [];
+                  const newGroups = [...groups];
+                  newGroups[groupIndex] = {
+                    ...newGroups[groupIndex],
+                    logins: newGroups[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, ...patch } : l),
+                  };
+                  updateDraft({ groups: newGroups } as Partial<VaultDraft>);
+                }}
+                onPatchGroupCustomField={(groupIndex, fieldIndex, patch) => {
+                  const groups = draft.groups || [];
+                  const newGroups = [...groups];
+                  newGroups[groupIndex] = {
+                    ...newGroups[groupIndex],
+                    customFields: newGroups[groupIndex].customFields.map((f, i) => i === fieldIndex ? { ...f, ...patch } : f),
+                  };
+                  updateDraft({ groups: newGroups } as Partial<VaultDraft>);
+                }}
+                onQueueGroupAttachmentFiles={(groupIndex, files) => {
+                  if (!files) return;
+                  const groups = draft.groups || [];
+                  const newGroups = [...groups];
+                  newGroups[groupIndex] = {
+                    ...newGroups[groupIndex],
+                    attachments: [...newGroups[groupIndex].attachments, ...Array.from(files)],
+                  };
+                  updateDraft({ groups: newGroups } as Partial<VaultDraft>);
+                }}
+                onRemoveQueuedGroupAttachment={(groupIndex, attachmentIndex) => {
+                  const groups = draft.groups || [];
+                  const newGroups = [...groups];
+                  newGroups[groupIndex] = {
+                    ...newGroups[groupIndex],
+                    attachments: newGroups[groupIndex].attachments.filter((_, i) => i !== attachmentIndex),
+                  };
+                  updateDraft({ groups: newGroups } as Partial<VaultDraft>);
+                }}
                 onSave={() => void saveDraft()}
                 onCancel={cancelEdit}
                 onDeleteSelected={() => selectedCipher && setPendingDelete(selectedCipher)}

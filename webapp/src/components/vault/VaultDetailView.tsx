@@ -250,6 +250,98 @@ export default function VaultDetailView(props: VaultDetailViewProps) {
             </div>
           )}
 
+          {/* Groups — multi-account login groups */}
+          {(props.selectedCipher.groups || []).length > 0 && (
+            <div className="card">
+              <h4>{t('txt_groups')}</h4>
+              {(props.selectedCipher.groups || []).map((group, groupIndex) => (
+                <div key={`detail-group-${groupIndex}`} className="group-detail-card">
+                  <div className="group-detail-head">
+                    <strong className="group-detail-name">{group.name || t('txt_default_group')}</strong>
+                    {group.description && <span className="group-detail-desc">{group.description}</span>}
+                  </div>
+                  {group.logins.map((login, loginIndex) => (
+                    <div key={`detail-group-login-${groupIndex}-${loginIndex}`} className="group-detail-login">
+                      {login.loginType === 'password' ? (
+                        <>
+                          {!!login.username && (
+                            <div className="kv-row">
+                              <span className="kv-label">{t('txt_username')}</span>
+                              <div className="kv-main"><strong className="value-ellipsis">{login.username}</strong></div>
+                              <div className="kv-actions">
+                                <button type="button" className="btn btn-secondary small" onClick={() => copyToClipboard(login.username)}>
+                                  <Clipboard size={14} className="btn-icon" /> {t('txt_copy')}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                          {!!login.password && (
+                            <div className="kv-row">
+                              <span className="kv-label">{t('txt_password')}</span>
+                              <div className="kv-main"><strong>{maskSecret(login.password)}</strong></div>
+                              <div className="kv-actions">
+                                <button type="button" className="btn btn-secondary small" onClick={() => copyToClipboard(login.password)}>
+                                  <Clipboard size={14} className="btn-icon" /> {t('txt_copy')}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                          {!!login.totp && (
+                            <div className="kv-row">
+                              <span className="kv-label">{t('txt_totp')}</span>
+                              <div className="kv-main"><strong>{t('txt_configured')}</strong></div>
+                              <div className="kv-actions" />
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <div className="kv-row">
+                            <span className="kv-label">{t('txt_third_party_platform')}</span>
+                            <div className="kv-main"><strong>{login.thirdPartyPlatform || '—'}</strong></div>
+                          </div>
+                          <div className="kv-row">
+                            <span className="kv-label">{t('txt_third_party_account')}</span>
+                            <div className="kv-main"><strong className="value-ellipsis">{login.thirdPartyAccount}</strong></div>
+                            <div className="kv-actions">
+                              <button type="button" className="btn btn-secondary small" onClick={() => copyToClipboard(login.thirdPartyAccount)}>
+                                <Clipboard size={14} className="btn-icon" /> {t('txt_copy')}
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                  {/* Group custom fields */}
+                  {(group.customFields || []).length > 0 && (
+                    <div className="group-detail-fields">
+                      {group.customFields.map((field, fi) => (
+                        <div key={`detail-group-field-${groupIndex}-${fi}`} className="kv-line">
+                          <span>{field.label}</span>
+                          <strong>{field.type === 1 ? maskSecret(field.value) : field.value}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {/* Group attachments */}
+                  {(group.attachments || []).length > 0 && (
+                    <div className="group-detail-attachments">
+                      <div className="group-section-label">{t('txt_group_attachments')}</div>
+                      {(group.attachments || []).map((file, ai) => (
+                        <div key={`detail-group-att-${groupIndex}-${ai}`} className="attachment-row">
+                          <Paperclip size={14} />
+                          <span className="value-ellipsis">{file.name}</span>
+                          <span>{formatAttachmentSize({ size: file.size })}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
           {(props.selectedCipher.login?.uris || []).length > 0 && (
             <div className="card">
               <h4>{t('txt_autofill_options')}</h4>

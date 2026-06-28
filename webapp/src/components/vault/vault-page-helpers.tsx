@@ -9,7 +9,7 @@ import {
 } from 'lucide-preact';
 import { copyTextToClipboard } from '@/lib/clipboard';
 import { t } from '@/lib/i18n';
-import type { Cipher, CipherAttachment, CustomFieldType, VaultDraft, VaultDraftField, VaultDraftLoginUri } from '@/lib/types';
+import type { Cipher, CipherAttachment, CustomFieldType, VaultDraft, VaultDraftField, VaultDraftGroup, VaultDraftGroupLogin, VaultDraftLoginUri } from '@/lib/types';
 import WebsiteIcon from './WebsiteIcon';
 
 export type TypeFilter = 'login' | 'card' | 'identity' | 'note' | 'ssh';
@@ -548,6 +548,31 @@ export function buildCipherDuplicateSignature(cipher: Cipher): string {
   return JSON.stringify(normalized);
 }
 
+export function createEmptyGroupLogin(): VaultDraftGroupLogin {
+  return {
+    id: crypto.randomUUID(),
+    loginType: 'password',
+    username: '',
+    password: '',
+    totp: '',
+    fido2Credentials: [],
+    thirdPartyPlatform: '',
+    thirdPartyAccount: '',
+  };
+}
+
+export function createEmptyGroup(): VaultDraftGroup {
+  return {
+    id: crypto.randomUUID(),
+    name: '',
+    description: '',
+    logins: [createEmptyGroupLogin()],
+    customFields: [],
+    attachments: [],
+    removedAttachmentIds: {},
+  };
+}
+
 export function createEmptyDraft(type: number): VaultDraft {
   return {
     type,
@@ -593,6 +618,7 @@ export function createEmptyDraft(type: number): VaultDraft {
     sshPublicKey: '',
     sshFingerprint: '',
     customFields: [],
+    groups: [],
   };
 }
 
@@ -669,6 +695,31 @@ export function draftFromCipher(cipher: Cipher): VaultDraft {
     linkedId: field.linkedId ?? null,
     attachmentId: field.type === 4 ? (field.attachmentId || null) : null,
   }));
+
+  // Auto-create default group from existing login data
+  if (cipher.login) {
+    const hasLoginData = cipher.login.decUsername || cipher.login.decPassword || cipher.login.decTotp
+      || (cipher.login as Record<string, string>).decThirdPartyPlatform;
+    if (hasLoginData) {
+      const defaultLogin = createEmptyGroupLogin();
+      defaultLogin.username = cipher.login.decUsername || '';
+      defaultLogin.password = cipher.login.decPassword || '';
+      defaultLogin.totp = cipher.login.decTotp || '';
+      defaultLogin.fido2Credentials = Array.isArray(cipher.login.fido2Credentials)
+        ? cipher.login.fido2Credentials.map((c) => ({ ...c }))
+        : [];
+      const decThirdPartyPlatform = (cipher.login as Record<string, string>).decThirdPartyPlatform || '';
+      const decThirdPartyAccount = (cipher.login as Record<string, string>).decThirdPartyAccount || '';
+      defaultLogin.thirdPartyPlatform = decThirdPartyPlatform;
+      defaultLogin.thirdPartyAccount = decThirdPartyAccount;
+      if (decThirdPartyPlatform) defaultLogin.loginType = 'third_party';
+
+      const defaultGroup = createEmptyGroup();
+      defaultGroup.name = t('txt_default_group');
+      defaultGroup.logins = [defaultLogin];
+      draft.groups = [defaultGroup];
+    }
+  }
 
   return draft;
 }

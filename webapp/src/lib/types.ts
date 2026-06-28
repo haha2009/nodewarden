@@ -187,6 +187,8 @@ export interface Cipher {
   decName?: string;
   decNotes?: string;
   decIcon?: string;
+  /** Frontend-only: group data (not yet persisted to backend) */
+  groups?: VaultDraftGroup[];
   [key: string]: unknown;
 }
 
@@ -249,6 +251,27 @@ export interface VaultDraftField {
   _file?: File | null;
 }
 
+export interface VaultDraftGroupLogin {
+  id: string;
+  loginType: 'password' | 'third_party';
+  username: string;
+  password: string;
+  totp: string;
+  fido2Credentials: Array<Record<string, unknown>>;
+  thirdPartyPlatform: string;
+  thirdPartyAccount: string;
+}
+
+export interface VaultDraftGroup {
+  id: string;
+  name: string;
+  description: string;
+  logins: VaultDraftGroupLogin[];
+  customFields: VaultDraftField[];
+  attachments: File[];
+  removedAttachmentIds: Record<string, boolean>;
+}
+
 export interface VaultDraft {
   id?: string;
   type: number;
@@ -294,6 +317,7 @@ export interface VaultDraft {
   sshPublicKey: string;
   sshFingerprint: string;
   customFields: VaultDraftField[];
+  groups: VaultDraftGroup[];
 }
 
 export interface ListResponse<T> {

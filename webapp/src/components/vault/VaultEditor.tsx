@@ -1,9 +1,9 @@
 import type { RefObject } from 'preact';
 import { createPortal } from 'preact/compat';
-import { ArrowDown, ArrowUp, CheckCheck, Copy, Download, Eye, EyeOff, Paperclip, Plus, QrCode, RefreshCw, Sparkles, Star, StarOff, Trash2, Upload, X } from 'lucide-preact';
+import { ArrowDown, ArrowUp, CheckCheck, ChevronDown, ChevronRight, Copy, Download, Eye, EyeOff, Paperclip, Plus, QrCode, RefreshCw, Sparkles, Star, StarOff, Trash2, Upload, X } from 'lucide-preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { useDialogLifecycle } from '@/components/ConfirmDialog';
-import type { Cipher, Folder, VaultDraft, VaultDraftField } from '@/lib/types';
+import type { Cipher, Folder, VaultDraft, VaultDraftField, VaultDraftGroup, VaultDraftGroupLogin } from '@/lib/types';
 import { t } from '@/lib/i18n';
 import { cardBrand } from '@/lib/import-format-shared';
 import {
@@ -58,6 +58,15 @@ interface VaultEditorProps {
   onPatchDraftCustomField: (index: number, patch: Partial<VaultDraftField>) => void;
   onUpdateDraftCustomFields: (fields: VaultDraftField[]) => void;
   onOpenFieldModal: () => void;
+  onUpdateGroups: (groups: VaultDraftGroup[]) => void;
+  onAddGroup: () => void;
+  onRemoveGroup: (groupIndex: number) => void;
+  onAddGroupLogin: (groupIndex: number, loginType: 'password' | 'third_party') => void;
+  onRemoveGroupLogin: (groupIndex: number, loginIndex: number) => void;
+  onUpdateGroupLogin: (groupIndex: number, loginIndex: number, patch: Partial<VaultDraftGroupLogin>) => void;
+  onPatchGroupCustomField: (groupIndex: number, fieldIndex: number, patch: Partial<VaultDraftField>) => void;
+  onQueueGroupAttachmentFiles: (groupIndex: number, files: FileList | null) => void;
+  onRemoveQueuedGroupAttachment: (groupIndex: number, attachmentIndex: number) => void;
   onSave: () => void;
   onCancel: () => void;
   onDeleteSelected: () => void;
@@ -606,6 +615,274 @@ export default function VaultEditor(props: VaultEditorProps) {
           </>
         )}
       </div>
+
+      {/* Login Groups — multi-account management */}
+      {props.draft.type === 1 && (() => {
+        const groups = props.draft.groups || [];
+        return (
+          <div className="card">
+            <div className="section-head">
+              <h4>{t('txt_groups')}</h4>
+              <button type="button" className="btn btn-secondary small" onClick={props.onAddGroup}>
+                <Plus size={14} className="btn-icon" /> {t('txt_add_group')}
+              </button>
+            </div>
+            {groups.length === 0 && (
+              <div className="detail-sub">{t('txt_add_group_hint')}</div>
+            )}
+            {groups.map((group, groupIndex) => {
+              const [collapsed, setCollapsed] = useState(false);
+              const hasLoginData = group.logins.some(l => l.username || l.password || l.thirdPartyPlatform);
+              return (
+                <div key={group.id} className="group-card">
+                  <div className="group-head">
+                    <button type="button" className="group-collapse-btn" onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? t('txt_expand') : t('txt_collapse')}>
+                      {collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                    </button>
+                    <input
+                      className="input group-name-input"
+                      value={group.name}
+                      onInput={(e) => {
+                        const value = (e.currentTarget as HTMLInputElement).value;
+                        const updated = [...groups];
+                        updated[groupIndex] = { ...updated[groupIndex], name: value };
+                        props.onUpdateGroups(updated);
+                      }}
+                      placeholder={t('txt_group_name_placeholder')}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-secondary small group-remove-btn"
+                      disabled={props.busy}
+                      onClick={() => {
+                        if (hasLoginData) {
+                          window.confirm(t('txt_remove_group_confirm')) && props.onRemoveGroup(groupIndex);
+                        } else {
+                          props.onRemoveGroup(groupIndex);
+                        }
+                      }}
+                    >
+                      <X size={14} className="btn-icon" />
+                    </button>
+                  </div>
+                  {!collapsed && (
+                    <div className="group-body">
+                      <label className="field field-compact">
+                        <span>{t('txt_group_description')}</span>
+                        <input
+                          className="input"
+                          value={group.description}
+                          onInput={(e) => {
+                            const value = (e.currentTarget as HTMLInputElement).value;
+                            const updated = [...groups];
+                            updated[groupIndex] = { ...updated[groupIndex], description: value };
+                            props.onUpdateGroups(updated);
+                          }}
+                          placeholder={t('txt_group_description_placeholder')}
+                        />
+                      </label>
+
+                      {/* Logins */}
+                      <div className="group-logins-label">{t('txt_group_logins')}</div>
+                      {group.logins.map((login, loginIndex) => (
+                        <div key={login.id} className="group-login-card">
+                          <div className="group-login-head">
+                            <div className="group-login-type-switch">
+                              <button
+                                type="button"
+                                className={`segmented-btn ${login.loginType === 'password' ? 'active' : ''}`}
+                                onClick={() => {
+                                  const updated = [...groups];
+                                  const updatedLogin = { ...updated[groupIndex].logins[loginIndex], loginType: 'password' as const };
+                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? updatedLogin : l) };
+                                  props.onUpdateGroups(updated);
+                                }}
+                              >
+                                {t('txt_add_password_login')}
+                              </button>
+                              <button
+                                type="button"
+                                className={`segmented-btn ${login.loginType === 'third_party' ? 'active' : ''}`}
+                                onClick={() => {
+                                  const updated = [...groups];
+                                  const updatedLogin = { ...updated[groupIndex].logins[loginIndex], loginType: 'third_party' as const };
+                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? updatedLogin : l) };
+                                  props.onUpdateGroups(updated);
+                                }}
+                              >
+                                {t('txt_add_third_party_login')}
+                              </button>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-secondary small"
+                              onClick={() => props.onRemoveGroupLogin(groupIndex, loginIndex)}
+                            >
+                              <X size={14} className="btn-icon" />
+                            </button>
+                          </div>
+                          {login.loginType === 'password' ? (
+                            <>
+                              <label className="field field-compact">
+                                <span>{t('txt_username')}</span>
+                                <input className="input" value={login.username} onInput={(e) => {
+                                  const value = (e.currentTarget as HTMLInputElement).value;
+                                  const updated = [...groups];
+                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, username: value } : l) };
+                                  props.onUpdateGroups(updated);
+                                }} />
+                              </label>
+                              <label className="field field-compact">
+                                <span>{t('txt_password')}</span>
+                                <div className="leading-input-inner">
+                                  <input className="input" type="password" value={login.password} onInput={(e) => {
+                                    const value = (e.currentTarget as HTMLInputElement).value;
+                                    const updated = [...groups];
+                                    updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, password: value } : l) };
+                                    props.onUpdateGroups(updated);
+                                  }} />
+                                  <button type="button" className="input-icon-btn" title={t('txt_generate_password')} aria-label={t('txt_generate_password')} onClick={() => {
+                                    const pwd = generatePasswordWithOptions(pgLength, pgUppercase, pgLowercase, pgNumbers, pgSymbols, pgExcludeSimilar);
+                                    const updated = [...groups];
+                                    updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, password: pwd } : l) };
+                                    props.onUpdateGroups(updated);
+                                  }}>
+                                    <RefreshCw size={16} />
+                                  </button>
+                                </div>
+                              </label>
+                              <label className="field field-compact">
+                                <span>{t('txt_totp_secret')}</span>
+                                <input className="input" value={login.totp} onInput={(e) => {
+                                  const value = (e.currentTarget as HTMLInputElement).value;
+                                  const updated = [...groups];
+                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, totp: value } : l) };
+                                  props.onUpdateGroups(updated);
+                                }} />
+                              </label>
+                            </>
+                          ) : (
+                            <>
+                              <label className="field field-compact">
+                                <span>{t('txt_third_party_platform')}</span>
+                                <select className="input" value={login.thirdPartyPlatform} onInput={(e) => {
+                                  const value = (e.currentTarget as HTMLSelectElement).value;
+                                  const updated = [...groups];
+                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, thirdPartyPlatform: value } : l) };
+                                  props.onUpdateGroups(updated);
+                                }}>
+                                  <option value="">{t('txt_select_platform')}</option>
+                                  <option value="google">Google</option>
+                                  <option value="apple">Apple</option>
+                                  <option value="microsoft">Microsoft</option>
+                                  <option value="twitter">Twitter / X</option>
+                                  <option value="facebook">Facebook</option>
+                                  <option value="github">GitHub</option>
+                                  <option value="discord">Discord</option>
+                                  <option value="telegram">Telegram</option>
+                                  <option value="wechat">WeChat</option>
+                                  <option value="qq">QQ</option>
+                                  <option value="weibo">Weibo</option>
+                                </select>
+                              </label>
+                              <label className="field field-compact">
+                                <span>{t('txt_third_party_account')}</span>
+                                <input className="input" value={login.thirdPartyAccount} onInput={(e) => {
+                                  const value = (e.currentTarget as HTMLInputElement).value;
+                                  const updated = [...groups];
+                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, thirdPartyAccount: value } : l) };
+                                  props.onUpdateGroups(updated);
+                                }} />
+                              </label>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                      <button type="button" className="btn btn-secondary small group-add-login-btn" onClick={() => {
+                        const type = window.confirm(t('txt_add_password_login') + '?' ) ? 'password' : 'third_party';
+                        props.onAddGroupLogin(groupIndex, type);
+                      }}>
+                        <Plus size={14} className="btn-icon" /> {t('txt_add_login_to_group')}
+                      </button>
+
+                      {/* Group custom fields */}
+                      {group.customFields.length > 0 && (
+                        <div className="group-section-label">{t('txt_group_custom_fields')}</div>
+                      )}
+                      {group.customFields.map((field, fieldIndex) => (
+                        <div key={`group-field-${groupIndex}-${fieldIndex}`} className="group-custom-field-row">
+                          <input className="input" value={field.label} placeholder={t('txt_field_label')} onInput={(e) => {
+                            const value = (e.currentTarget as HTMLInputElement).value;
+                            const updated = [...groups];
+                            updated[groupIndex] = { ...updated[groupIndex], customFields: updated[groupIndex].customFields.map((f, i) => i === fieldIndex ? { ...f, label: value } : f) };
+                            props.onUpdateGroups(updated);
+                          }} />
+                          <input className="input" value={field.value} placeholder={t('txt_text')} onInput={(e) => {
+                            const value = (e.currentTarget as HTMLInputElement).value;
+                            const updated = [...groups];
+                            updated[groupIndex] = { ...updated[groupIndex], customFields: updated[groupIndex].customFields.map((f, i) => i === fieldIndex ? { ...f, value: value } : f) };
+                            props.onUpdateGroups(updated);
+                          }} />
+                          <button type="button" className="btn btn-secondary small" onClick={() => {
+                            const updated = [...groups];
+                            updated[groupIndex] = { ...updated[groupIndex], customFields: updated[groupIndex].customFields.filter((_, i) => i !== fieldIndex) };
+                            props.onUpdateGroups(updated);
+                          }}>
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                      <button type="button" className="btn btn-secondary small group-add-field-btn" onClick={() => {
+                        const updated = [...groups];
+                        updated[groupIndex] = { ...updated[groupIndex], customFields: [...updated[groupIndex].customFields, { type: 0, label: '', value: '' }] };
+                        props.onUpdateGroups(updated);
+                      }}>
+                        <Plus size={14} className="btn-icon" /> {t('txt_add_field')}
+                      </button>
+
+                      {/* Group attachments */}
+                      <div className="group-section-label">{t('txt_group_attachments')}</div>
+                      <div className="group-attachment-list">
+                        {group.attachments.map((file, attIndex) => (
+                          <div key={`group-att-${groupIndex}-${attIndex}`} className="attachment-row">
+                            <Paperclip size={14} />
+                            <span className="value-ellipsis">{file.name}</span>
+                            <button type="button" className="btn btn-secondary small" onClick={() => {
+                              const updated = [...groups];
+                              updated[groupIndex] = { ...updated[groupIndex], attachments: updated[groupIndex].attachments.filter((_, i) => i !== attIndex) };
+                              props.onUpdateGroups(updated);
+                            }}>
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <button type="button" className="btn btn-secondary small group-add-attachment-btn" onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.multiple = true;
+                        input.onchange = () => {
+                          if (input.files) {
+                            const updated = [...groups];
+                            updated[groupIndex] = { ...updated[groupIndex], attachments: [...updated[groupIndex].attachments, ...Array.from(input.files)] };
+                            props.onUpdateGroups(updated);
+                          }
+                        };
+                        input.click();
+                      }}>
+                        <Plus size={14} className="btn-icon" /> {t('txt_upload_attachments')}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            <button type="button" className="btn btn-secondary full group-add-group-btn" onClick={props.onAddGroup}>
+              <Plus size={14} className="btn-icon" /> {t('txt_add_group')}
+            </button>
+          </div>
+        );
+      })()}
 
       {props.draft.type === 3 && (
         <div className="card">

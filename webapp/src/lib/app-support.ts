@@ -151,6 +151,7 @@ function buildEmptyImportDraft(type: number): VaultDraft {
     sshPublicKey: '',
     sshFingerprint: '',
     customFields: [],
+    groups: [],
   };
 }
 
