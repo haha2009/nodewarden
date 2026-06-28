@@ -25,6 +25,7 @@ import {
   toBooleanFieldValue,
 } from '@/components/vault/vault-page-helpers';
 import { FloatingLabelInput } from '@/components/FloatingLabelInput';
+import { FloatingFieldset } from '@/components/FloatingFieldset';
 import WebsiteIcon from '@/components/vault/WebsiteIcon';
 import { beginWebsiteIconLoad } from '@/lib/website-icon-cache';
 import { hostFromUri, websiteIconUrl } from '@/components/vault/vault-page-helpers';
@@ -458,13 +459,10 @@ export default function VaultEditor(props: VaultEditorProps) {
 
       {/* Login Info card — password/third-party login fields + TOTP */}
       {props.draft.type === 1 && (
-        <div className="card">
-          <div className="section-head">
-            <h4>{t('txt_login_info')}</h4>
-            <button type="button" className="btn btn-secondary small" onClick={props.onAddGroup}>
-              <Plus size={14} className="btn-icon" /> {t('txt_add_group')}
-            </button>
-          </div>
+        <FloatingFieldset
+          label={t('txt_login_info')}
+          onSave={() => { /* title is UI-only, no draft update needed */ }}
+        >
           {/* Login type selector: password login or third-party login */}
           <div className="segmented-control">
             <button
@@ -540,6 +538,10 @@ export default function VaultEditor(props: VaultEditorProps) {
                 <QrCode size={18} className="btn-icon" />
               </button>
           </FloatingLabelInput>
+          {/* Add Group button — below TOTP, full width, aligned with segmented control */}
+          <button type="button" className="btn btn-secondary full add-group-btn" onClick={props.onAddGroup}>
+            <Plus size={14} className="btn-icon" /> {t('txt_add_group')}
+          </button>
           {/* Passkeys */}
           {props.draft.loginFido2Credentials.length > 0 && (
             <>
@@ -572,7 +574,7 @@ export default function VaultEditor(props: VaultEditorProps) {
               </div>
             </>
           )}
-        </div>
+        </FloatingFieldset>
       )}
 
       {/* Login Groups — multi-account management (hidden by default, shown when groups exist) */}

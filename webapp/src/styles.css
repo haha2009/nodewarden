@@ -545,6 +545,102 @@ h4 {
 }
 /* ── End Floating Label ── */
 
+/* ── Floating Fieldset ── */
+.fieldset-floating {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  padding: 16px;
+  margin: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.fieldset-floating > :first-child {
+  margin-top: 0;
+}
+
+.fieldset-floating-legend {
+  position: absolute;
+  top: 0;
+  left: 12px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--panel);
+  padding: 0 4px;
+  z-index: 1;
+  float: left; /* legend width shrinks to content */
+  margin: 0;
+}
+
+.fieldset-floating-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.fieldset-floating-legend-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s ease-out, background-color 0.15s ease-out;
+}
+
+.fieldset-floating-legend-btn:hover {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.fieldset-floating-legend.is-editing {
+  /* Position the editing container (input + buttons) on the border line */
+  padding: 0;
+  background: transparent;
+  gap: 0;
+}
+
+.fieldset-floating-legend.is-editing .field-floating {
+  margin: 0;
+}
+
+.fieldset-floating-legend.is-editing .field-floating > input {
+  height: 36px;
+  padding-top: 8px;
+  font-size: 14px;
+}
+
+.fieldset-floating-legend.is-editing .field-floating > span {
+  font-size: 13px;
+}
+
+.fieldset-floating-legend.is-editing .field-floating-suffix .input-icon-btn {
+  color: var(--muted-strong);
+}
+
+.fieldset-floating-legend.is-editing .field-floating-suffix .input-icon-btn:hover {
+  color: var(--primary);
+}
+/* ── End Floating Fieldset ── */
+
+/* Add Group button — below TOTP, full width like segmented control */
+.add-group-btn {
+  width: 100%;
+  margin-top: 4px;
+}
+.add-group-btn + .section-head {
+  margin-top: 12px;
+}
+
 .field > span {
   margin: 0 0 6px;
   color: var(--muted-strong);
@@ -769,6 +865,11 @@ h4 {
 .card.log-detail-panel {
   margin-right: -4px;
   padding-right: 18px;
+}
+
+/* Section head — header inside card, margin below */
+.section-head {
+  margin-bottom: 12px;
 }
 
 .card h4,

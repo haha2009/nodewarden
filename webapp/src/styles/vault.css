@@ -11,8 +11,11 @@
   border-color: var(--line);
 }
 
-/* 新增登录页面 Card 间距 */
-.card + .card {
+/* 新增登录页面 Card 间距 — 仅相邻 card 之间 20px */
+.card + .card,
+.fieldset-floating + .card,
+.card + .fieldset-floating,
+.fieldset-floating + .fieldset-floating {
   margin-top: 20px;
 }
 
@@ -365,7 +368,7 @@
 }
 
 .passkeys-section-head {
-  @apply mt-5;
+  @apply mt-3;
 }
 
 .list-item:hover {
@@ -623,7 +626,7 @@
 }
 
 .card {
-  @apply mb-3 px-4 py-4;
+  @apply px-4 py-4;
 }
 
 .detail-col > .card {
@@ -646,6 +649,11 @@
 
 .card h4 {
   @apply mb-3 mt-0;
+}
+
+.section-head h3,
+.section-head h4 {
+  @apply mb-0;
 }
 
 /* Segmented control for login type toggle */
@@ -1163,7 +1171,7 @@
 }
 
 .name-field-group {
-  @apply mt-3 mb-4;
+  @apply mb-4;
 }
 
 .name-field-label {
