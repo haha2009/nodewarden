@@ -467,6 +467,7 @@ h4 {
 /* ── Floating Label Input ── */
 .field-floating {
   position: relative;
+  --suffix-btn-count: 0;
 }
 
 .field-floating > span {
@@ -487,12 +488,60 @@ h4 {
 .field-floating > input {
   height: 44px;
   padding-top: 10px;
+  transition: padding-right 0.15s ease-out;
+}
+
+.field-floating > input.has-suffix {
+  padding-right: calc(8px + var(--suffix-btn-count, 1) * 36px);
 }
 
 .field-floating.is-floating > span {
   top: 0;
   transform: translateY(-50%) scale(0.85);
   color: var(--primary);
+}
+
+.field-floating-suffix {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+.field-floating-suffix .input-icon-btn {
+  position: static;
+  transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--muted-strong);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.field-floating-suffix .input-icon-btn:hover:not(:disabled) {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  transform: none;
+}
+
+.field-floating-suffix .input-icon-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.field-floating-suffix .input-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 /* ── End Floating Label ── */
 

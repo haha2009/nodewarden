@@ -395,38 +395,31 @@ export default function VaultEditor(props: VaultEditorProps) {
         {/* Website URLs — homepage + login page */}
         {props.draft.type === 1 && (
           <>
-            <label className="field">
-              <span>{t('txt_website_homepage')}</span>
-              <div className="input-action-wrap">
-                <input
-                  className="input"
-                  value={props.draft.loginUris[0]?.uri || ''}
-                  onInput={(e) => {
-                    const value = (e.currentTarget as HTMLInputElement).value;
-                    props.onUpdateDraftLoginUri(0, value);
-                    const host = hostFromUri(value);
-                    if (host) {
-                      beginWebsiteIconLoad(host, websiteIconUrl(host, value));
-                    }
-                  }}
-                  placeholder="https://example.com"
-                />
-                <button
-                  type="button"
-                  className={`input-icon-btn ai-detect-btn ${aiDetected ? 'ai-detected' : ''}`}
-                  title={t('txt_ai_auto_name')}
-                  aria-label={t('txt_ai_auto_name')}
-                  onClick={handleAiDetect}
-                  disabled={!props.draft.loginUris[0]?.uri?.trim()}
-                >
-                  <Sparkles size={16} className={aiDetected ? 'sparkle-active' : ''} />
-                </button>
-              </div>
-            </label>
+            <FloatingLabelInput
+              label={t('txt_website_homepage')}
+              value={props.draft.loginUris[0]?.uri || ''}
+              onInput={(v) => {
+                props.onUpdateDraftLoginUri(0, v);
+                const host = hostFromUri(v);
+                if (host) {
+                  beginWebsiteIconLoad(host, websiteIconUrl(host, v));
+                }
+              }}
+            >
+              <button
+                type="button"
+                className={`input-icon-btn ${aiDetected ? 'ai-detected' : ''}`}
+                title={t('txt_ai_auto_name')}
+                aria-label={t('txt_ai_auto_name')}
+                onClick={handleAiDetect}
+                disabled={!props.draft.loginUris[0]?.uri?.trim()}
+              >
+                <Sparkles size={16} className={aiDetected ? 'sparkle-active' : ''} />
+              </button>
+            </FloatingLabelInput>
             <FloatingLabelInput
               label={t('txt_website_login_page')}
               value={props.draft.loginUris[1]?.uri || ''}
-              placeholder="https://example.com"
               onInput={(v) => {
                 props.onUpdateDraftLoginUri(1, v);
                 if (props.draft.loginUris[1]?.match !== 1) props.onUpdateDraftLoginUriMatch(1, 1);
@@ -438,7 +431,6 @@ export default function VaultEditor(props: VaultEditorProps) {
         <div className="name-field-group">
           <div className="name-field-row">
             <div className="name-field-icon-col">
-              <span className="name-field-label">{t('txt_logo')}</span>
               <span className="name-icon-box" aria-hidden="true" onClick={props.isCreating ? handleIconUpload : undefined}>
                 {iconCipher ? (
                   <WebsiteIcon
@@ -453,12 +445,11 @@ export default function VaultEditor(props: VaultEditorProps) {
               </span>
             </div>
             <div className="name-field-input-block">
-              <span className="name-field-label">{t('txt_name')}</span>
-              <input
-                className="input"
+              <FloatingLabelInput
+                label={t('txt_name')}
                 value={props.draft.name}
-                onInput={(e) => props.onUpdateDraft({ name: (e.currentTarget as HTMLInputElement).value })}
                 placeholder={t('txt_enter_name_placeholder')}
+                onInput={(v) => props.onUpdateDraft({ name: v })}
               />
             </div>
           </div>
@@ -501,15 +492,12 @@ export default function VaultEditor(props: VaultEditorProps) {
                 value={props.draft.loginUsername}
                 onInput={(v) => props.onUpdateDraft({ loginUsername: v })}
               />
-              <label className="field">
-                <span>{t('txt_password')}</span>
-                <div className="leading-input-inner">
-                  <input
-                    className="input"
-                    type={showPassword ? 'text' : 'password'}
-                    value={props.draft.loginPassword}
-                    onInput={(e) => props.onUpdateDraft({ loginPassword: (e.currentTarget as HTMLInputElement).value })}
-                  />
+              <FloatingLabelInput
+                label={t('txt_password')}
+                value={props.draft.loginPassword}
+                type={showPassword ? 'text' : 'password'}
+                onInput={(v) => props.onUpdateDraft({ loginPassword: v })}
+              >
                   <button type="button" className="input-icon-btn" title={t('txt_generate_password')} aria-label={t('txt_generate_password')} onClick={openGeneratorDialog}>
                     <RefreshCw size={16} />
                   </button>
@@ -519,8 +507,7 @@ export default function VaultEditor(props: VaultEditorProps) {
                   <button type="button" className="input-icon-btn" title={showPassword ? t('txt_hide_password') : t('txt_show_password')} aria-label={showPassword ? t('txt_hide_password') : t('txt_show_password')} onClick={() => setShowPassword(!showPassword)}>
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
-                </div>
-              </label>
+              </FloatingLabelInput>
             </>
           )}
           {/* Third-party login fields */}
@@ -544,15 +531,15 @@ export default function VaultEditor(props: VaultEditorProps) {
             </div>
           )}
           {/* TOTP */}
-          <label className="field">
-            <span>{t('txt_totp_secret')}</span>
-            <div className="input-action-wrap">
-              <input className="input" value={props.draft.loginTotp} onInput={(e) => props.onUpdateDraft({ loginTotp: (e.currentTarget as HTMLInputElement).value })} />
+          <FloatingLabelInput
+            label={t('txt_totp_secret')}
+            value={props.draft.loginTotp}
+            onInput={(v) => props.onUpdateDraft({ loginTotp: v })}
+          >
               <button type="button" className="input-icon-btn" title={t('txt_scan_totp_qr')} aria-label={t('txt_scan_totp_qr')} disabled={props.busy} onClick={() => { setTotpQrStatus(''); setTotpQrOpen(true); }}>
                 <QrCode size={18} className="btn-icon" />
               </button>
-            </div>
-          </label>
+          </FloatingLabelInput>
           {/* Passkeys */}
           {props.draft.loginFido2Credentials.length > 0 && (
             <>
