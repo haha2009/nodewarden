@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks';
 import { ArrowLeft, Eye, EyeOff, KeyRound, LogIn, LogOut, Unlock, UserPlus } from 'lucide-preact';
 import NetworkStatusBadge from '@/components/NetworkStatusBadge';
 import StandalonePageFrame from '@/components/StandalonePageFrame';
+import { FloatingLabelInput } from '@/components/FloatingLabelInput';
 import { t } from '@/lib/i18n';
 
 interface LoginValues {
@@ -157,29 +158,19 @@ export default function AuthViews(props: AuthViewsProps) {
               props.onSubmitRegister();
             }}
           >
-            <label className="field">
-              <span>{t('txt_name')}</span>
-              <input
-                className="input"
-                value={props.registerValues.name}
-                autoComplete="name"
-                onInput={(e) =>
-                  props.onChangeRegister({ ...props.registerValues, name: (e.currentTarget as HTMLInputElement).value })
-                }
-              />
-            </label>
-            <label className="field">
-              <span>{t('txt_email')}</span>
-              <input
-                className="input"
-                type="email"
-                value={props.registerValues.email}
-                autoComplete="email"
-                onInput={(e) =>
-                  props.onChangeRegister({ ...props.registerValues, email: (e.currentTarget as HTMLInputElement).value })
-                }
-              />
-            </label>
+            <FloatingLabelInput
+              label={t('txt_name')}
+              value={props.registerValues.name}
+              autoComplete="name"
+              onInput={(v) => props.onChangeRegister({ ...props.registerValues, name: v })}
+            />
+            <FloatingLabelInput
+              label={t('txt_email')}
+              value={props.registerValues.email}
+              type="email"
+              autoComplete="email"
+              onInput={(v) => props.onChangeRegister({ ...props.registerValues, email: v })}
+            />
             <PasswordField
               label={t('txt_master_password')}
               value={props.registerValues.password}

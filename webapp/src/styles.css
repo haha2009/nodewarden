@@ -464,6 +464,38 @@ h4 {
   margin-bottom: 12px;
 }
 
+/* ── Floating Label Input ── */
+.field-floating {
+  position: relative;
+}
+
+.field-floating > span {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--muted);
+  pointer-events: none;
+  background: var(--panel);
+  padding: 0 4px;
+  transition: top 0.15s ease-out, transform 0.15s ease-out, font-size 0.15s ease-out, color 0.15s ease-out;
+  line-height: 1;
+}
+
+.field-floating > input {
+  height: 44px;
+  padding-top: 10px;
+}
+
+.field-floating.is-floating > span {
+  top: 0;
+  transform: translateY(-50%) scale(0.85);
+  color: var(--primary);
+}
+/* ── End Floating Label ── */
+
 .field > span {
   margin: 0 0 6px;
   color: var(--muted-strong);
