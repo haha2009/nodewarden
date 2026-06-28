@@ -8,6 +8,7 @@ import type {
 } from '@/lib/api/backup';
 import { COMMON_TIME_ZONES, getDestinationTypeLabel } from '@/lib/backup-center';
 import type { RecommendedProvider } from '@/lib/backup-recommendations';
+import { FloatingLabelInput } from '@/components/FloatingLabelInput';
 import { RemoteBackupBrowser } from './RemoteBackupBrowser';
 import { t } from '@/lib/i18n';
 import { BackupIncludeAttachmentsField } from './BackupIncludeAttachmentsField';
@@ -193,15 +194,14 @@ export function BackupDestinationDetail(props: BackupDestinationDetailProps) {
       ) : (
         <>
           <div className="backup-name-row">
-            <label className="field backup-name-field">
-              <span>{t('txt_backup_destination_name')}</span>
-              <input
-                className="input"
+            <div className="backup-name-field">
+              <FloatingLabelInput
+                label={t('txt_backup_destination_name')}
                 value={props.selectedDestination.name}
                 disabled={props.loadingSettings || props.disableWhileBusy}
-                onInput={(event) => props.onUpdateDestination((destination) => ({ ...destination, name: (event.currentTarget as HTMLInputElement).value }))}
+                onInput={(v) => props.onUpdateDestination((destination) => ({ ...destination, name: v }))}
               />
-            </label>
+            </div>
             <label className="field backup-type-field">
               <span>{t('txt_backup_type')}</span>
               <input className="input" value={getDestinationTypeLabel(props.selectedDestination.type)} disabled />
@@ -334,90 +334,79 @@ export function BackupDestinationDetail(props: BackupDestinationDetailProps) {
 
           {props.selectedDestination.type === 'webdav' ? (
             <div className="field-grid">
-              <label className="field field-span-2">
-                <span>{t('txt_backup_webdav_url')}</span>
-                <input
-                  className="input"
+              <div className="field-span-2">
+                <FloatingLabelInput
+                  label={t('txt_backup_webdav_url')}
                   value={(props.selectedDestination.destination as WebDavBackupDestination).baseUrl}
                   disabled={props.loadingSettings || props.disableWhileBusy}
                   placeholder="https://dav.example.com/remote.php/dav/files/admin"
-                  onInput={(event) => props.onUpdateDestination((destination) => ({
+                  onInput={(v) => props.onUpdateDestination((destination) => ({
                     ...destination,
                     destination: {
                       ...(destination.destination as WebDavBackupDestination),
-                      baseUrl: (event.currentTarget as HTMLInputElement).value,
+                      baseUrl: v,
                     },
                   }))}
                 />
-              </label>
-              <label className="field">
-                <span>{t('txt_backup_webdav_username')}</span>
-                <input
-                  className="input"
-                  value={(props.selectedDestination.destination as WebDavBackupDestination).username}
-                  disabled={props.loadingSettings || props.disableWhileBusy}
-                  onInput={(event) => props.onUpdateDestination((destination) => ({
-                    ...destination,
-                    destination: {
-                      ...(destination.destination as WebDavBackupDestination),
-                      username: (event.currentTarget as HTMLInputElement).value,
-                    },
-                  }))}
-                />
-              </label>
-              <label className="field">
-                <span>{t('txt_backup_webdav_password')}</span>
-                <input
-                  className="input"
-                  type="password"
-                  value={(props.selectedDestination.destination as WebDavBackupDestination).password}
-                  disabled={props.loadingSettings || props.disableWhileBusy}
-                  onInput={(event) => props.onUpdateDestination((destination) => ({
-                    ...destination,
-                    destination: {
-                      ...(destination.destination as WebDavBackupDestination),
-                      password: (event.currentTarget as HTMLInputElement).value,
-                    },
-                  }))}
-                />
-              </label>
-              <label className="field field-span-2">
-                <span>{t('txt_backup_webdav_path')}</span>
-                <input
-                  className="input"
+              </div>
+              <FloatingLabelInput
+                label={t('txt_backup_webdav_username')}
+                value={(props.selectedDestination.destination as WebDavBackupDestination).username}
+                disabled={props.loadingSettings || props.disableWhileBusy}
+                onInput={(v) => props.onUpdateDestination((destination) => ({
+                  ...destination,
+                  destination: {
+                    ...(destination.destination as WebDavBackupDestination),
+                    username: v,
+                  },
+                }))}
+              />
+              <FloatingLabelInput
+                label={t('txt_backup_webdav_password')}
+                value={(props.selectedDestination.destination as WebDavBackupDestination).password}
+                disabled={props.loadingSettings || props.disableWhileBusy}
+                type="password"
+                onInput={(v) => props.onUpdateDestination((destination) => ({
+                  ...destination,
+                  destination: {
+                    ...(destination.destination as WebDavBackupDestination),
+                    password: v,
+                  },
+                }))}
+              />
+              <div className="field-span-2">
+                <FloatingLabelInput
+                  label={t('txt_backup_webdav_path')}
                   value={(props.selectedDestination.destination as WebDavBackupDestination).remotePath}
                   disabled={props.loadingSettings || props.disableWhileBusy}
                   placeholder="nodewarden/backups"
-                  onInput={(event) => props.onUpdateDestination((destination) => ({
+                  onInput={(v) => props.onUpdateDestination((destination) => ({
                     ...destination,
                     destination: {
                       ...(destination.destination as WebDavBackupDestination),
-                      remotePath: (event.currentTarget as HTMLInputElement).value,
+                      remotePath: v,
                     },
                   }))}
                 />
-              </label>
+              </div>
             </div>
           ) : null}
 
           {props.selectedDestination.type === 's3' ? (
             <div className="field-grid">
-              <label className="field">
-                <span>{t('txt_backup_s3_endpoint')}</span>
-                <input
-                  className="input"
-                  value={(props.selectedDestination.destination as S3BackupDestination).endpoint}
-                  disabled={props.loadingSettings || props.disableWhileBusy}
-                  placeholder="https://s3.example.com"
-                  onInput={(event) => props.onUpdateDestination((destination) => ({
-                    ...destination,
-                    destination: {
-                      ...(destination.destination as S3BackupDestination),
-                      endpoint: (event.currentTarget as HTMLInputElement).value,
-                    },
-                  }))}
-                />
-              </label>
+              <FloatingLabelInput
+                label={t('txt_backup_s3_endpoint')}
+                value={(props.selectedDestination.destination as S3BackupDestination).endpoint}
+                disabled={props.loadingSettings || props.disableWhileBusy}
+                placeholder="https://s3.example.com"
+                onInput={(v) => props.onUpdateDestination((destination) => ({
+                  ...destination,
+                  destination: {
+                    ...(destination.destination as S3BackupDestination),
+                    endpoint: v,
+                  },
+                }))}
+              />
               <label className="field">
                 <span>{t('txt_backup_s3_addressing_style')}</span>
                 <select
@@ -436,84 +425,71 @@ export function BackupDestinationDetail(props: BackupDestinationDetailProps) {
                   <option value="virtual-hosted-style">{t('txt_backup_s3_addressing_virtual_hosted_style')}</option>
                 </select>
               </label>
-              <label className="field">
-                <span>{t('txt_backup_s3_bucket')}</span>
-                <input
-                  className="input"
-                  value={(props.selectedDestination.destination as S3BackupDestination).bucket}
-                  disabled={props.loadingSettings || props.disableWhileBusy}
-                  onInput={(event) => props.onUpdateDestination((destination) => ({
-                    ...destination,
-                    destination: {
-                      ...(destination.destination as S3BackupDestination),
-                      bucket: (event.currentTarget as HTMLInputElement).value,
-                    },
-                  }))}
-                />
-              </label>
-              <label className="field">
-                <span>{t('txt_backup_s3_region')}</span>
-                <input
-                  className="input"
-                  value={(props.selectedDestination.destination as S3BackupDestination).region}
-                  disabled={props.loadingSettings || props.disableWhileBusy}
-                  placeholder="auto"
-                  onInput={(event) => props.onUpdateDestination((destination) => ({
-                    ...destination,
-                    destination: {
-                      ...(destination.destination as S3BackupDestination),
-                      region: (event.currentTarget as HTMLInputElement).value,
-                    },
-                  }))}
-                />
-              </label>
-              <label className="field">
-                <span>{t('txt_backup_s3_access_key')}</span>
-                <input
-                  className="input"
-                  value={(props.selectedDestination.destination as S3BackupDestination).accessKeyId}
-                  disabled={props.loadingSettings || props.disableWhileBusy}
-                  onInput={(event) => props.onUpdateDestination((destination) => ({
-                    ...destination,
-                    destination: {
-                      ...(destination.destination as S3BackupDestination),
-                      accessKeyId: (event.currentTarget as HTMLInputElement).value,
-                    },
-                  }))}
-                />
-              </label>
-              <label className="field">
-                <span>{t('txt_backup_s3_secret_key')}</span>
-                <input
-                  className="input"
-                  type="password"
-                  value={(props.selectedDestination.destination as S3BackupDestination).secretAccessKey}
-                  disabled={props.loadingSettings || props.disableWhileBusy}
-                  onInput={(event) => props.onUpdateDestination((destination) => ({
-                    ...destination,
-                    destination: {
-                      ...(destination.destination as S3BackupDestination),
-                      secretAccessKey: (event.currentTarget as HTMLInputElement).value,
-                    },
-                  }))}
-                />
-              </label>
-              <label className="field field-span-2">
-                <span>{t('txt_backup_s3_path')}</span>
-                <input
-                  className="input"
+              <FloatingLabelInput
+                label={t('txt_backup_s3_bucket')}
+                value={(props.selectedDestination.destination as S3BackupDestination).bucket}
+                disabled={props.loadingSettings || props.disableWhileBusy}
+                onInput={(v) => props.onUpdateDestination((destination) => ({
+                  ...destination,
+                  destination: {
+                    ...(destination.destination as S3BackupDestination),
+                    bucket: v,
+                  },
+                }))}
+              />
+              <FloatingLabelInput
+                label={t('txt_backup_s3_region')}
+                value={(props.selectedDestination.destination as S3BackupDestination).region}
+                disabled={props.loadingSettings || props.disableWhileBusy}
+                placeholder="auto"
+                onInput={(v) => props.onUpdateDestination((destination) => ({
+                  ...destination,
+                  destination: {
+                    ...(destination.destination as S3BackupDestination),
+                    region: v,
+                  },
+                }))}
+              />
+              <FloatingLabelInput
+                label={t('txt_backup_s3_access_key')}
+                value={(props.selectedDestination.destination as S3BackupDestination).accessKeyId}
+                disabled={props.loadingSettings || props.disableWhileBusy}
+                onInput={(v) => props.onUpdateDestination((destination) => ({
+                  ...destination,
+                  destination: {
+                    ...(destination.destination as S3BackupDestination),
+                    accessKeyId: v,
+                  },
+                }))}
+              />
+              <FloatingLabelInput
+                label={t('txt_backup_s3_secret_key')}
+                value={(props.selectedDestination.destination as S3BackupDestination).secretAccessKey}
+                disabled={props.loadingSettings || props.disableWhileBusy}
+                type="password"
+                onInput={(v) => props.onUpdateDestination((destination) => ({
+                  ...destination,
+                  destination: {
+                    ...(destination.destination as S3BackupDestination),
+                    secretAccessKey: v,
+                  },
+                }))}
+              />
+              <div className="field-span-2">
+                <FloatingLabelInput
+                  label={t('txt_backup_s3_path')}
                   value={(props.selectedDestination.destination as S3BackupDestination).rootPath}
                   disabled={props.loadingSettings || props.disableWhileBusy}
                   placeholder="nodewarden/backups"
-                  onInput={(event) => props.onUpdateDestination((destination) => ({
+                  onInput={(v) => props.onUpdateDestination((destination) => ({
                     ...destination,
                     destination: {
                       ...(destination.destination as S3BackupDestination),
-                      rootPath: (event.currentTarget as HTMLInputElement).value,
+                      rootPath: v,
                     },
                   }))}
                 />
-              </label>
+              </div>
             </div>
           ) : null}
 

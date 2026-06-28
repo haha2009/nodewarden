@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Clipboard, KeyRound, RefreshCw, ShieldCheck, ShieldOff, Trash2 } from 'lucide-preact';
+import { FloatingLabelInput } from '@/components/FloatingLabelInput';
 import { copyTextToClipboard } from '@/lib/clipboard';
 import qrcode from 'qrcode-generator';
 import type { AccountPasskeyCredential, AuthRequest, Profile } from '@/lib/types';
@@ -324,17 +325,13 @@ export default function SettingsPage(props: SettingsPageProps) {
 
       <section className="card settings-module">
         <h3>{t('txt_password_hint_optional')}</h3>
-        <label className="field">
-          <span>{t('txt_password_hint')}</span>
-          <input
-            className="input"
-            maxLength={120}
-            value={passwordHint}
-            placeholder={t('txt_password_hint_placeholder')}
-            onInput={(e) => setPasswordHint((e.currentTarget as HTMLInputElement).value)}
-          />
-          <div className="field-help">{t('txt_password_hint_register_help')}</div>
-        </label>
+        <FloatingLabelInput
+          label={t('txt_password_hint')}
+          value={passwordHint}
+          placeholder={t('txt_password_hint_placeholder')}
+          onInput={(v) => setPasswordHint(v)}
+        />
+        <div className="field-help">{t('txt_password_hint_register_help')}</div>
         <button
           type="button"
           className="btn btn-secondary"
@@ -390,10 +387,7 @@ export default function SettingsPage(props: SettingsPageProps) {
                   </div>
                 </div>
               </label>
-              <label className="field">
-                <span>{t('txt_verification_code')}</span>
-                <input className="input" value={token} disabled={totpLocked} onInput={(e) => setToken((e.currentTarget as HTMLInputElement).value)} />
-              </label>
+              <FloatingLabelInput label={t('txt_verification_code')} value={token} disabled={totpLocked} onInput={(v) => setToken(v)} />
               <div className="actions">
                 <button type="button" className="btn btn-primary" disabled={totpLocked} onClick={() => void enableTotp()}>
                   <ShieldCheck size={14} className="btn-icon" />
@@ -425,16 +419,12 @@ export default function SettingsPage(props: SettingsPageProps) {
           </button>
         </div>
         <div className="field-grid">
-          <label className="field">
-            <span>{t('txt_passkey_name')}</span>
-            <input
-              className="input"
-              maxLength={128}
-              value={accountPasskeyName}
-              placeholder={t('txt_account_passkey_name_placeholder')}
-              onInput={(e) => setAccountPasskeyName((e.currentTarget as HTMLInputElement).value)}
-            />
-          </label>
+          <FloatingLabelInput
+            label={t('txt_passkey_name')}
+            value={accountPasskeyName}
+            placeholder={t('txt_account_passkey_name_placeholder')}
+            onInput={(v) => setAccountPasskeyName(v)}
+          />
           <div className="field account-passkey-mode-field">
             <span>{t('txt_account_passkey_mode')}</span>
             <label className="account-passkey-toggle">

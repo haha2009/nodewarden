@@ -183,30 +183,19 @@ export default function AuthViews(props: AuthViewsProps) {
               autoComplete="new-password"
               onInput={(v) => props.onChangeRegister({ ...props.registerValues, password2: v })}
             />
-            <label className="field">
-              <span>{t('txt_password_hint_optional')}</span>
-              <input
-                className="input"
-                maxLength={120}
-                value={props.registerValues.passwordHint}
-                placeholder={t('txt_password_hint_register_placeholder')}
-                onInput={(e) =>
-                  props.onChangeRegister({ ...props.registerValues, passwordHint: (e.currentTarget as HTMLInputElement).value })
-                }
-              />
-            </label>
+            <FloatingLabelInput
+              label={t('txt_password_hint_optional')}
+              value={props.registerValues.passwordHint}
+              placeholder={t('txt_password_hint_register_placeholder')}
+              onInput={(v) => props.onChangeRegister({ ...props.registerValues, passwordHint: v })}
+            />
             {showInviteCodeField ? (
-              <label className="field">
-                <span>{t('txt_invite_code_required')}</span>
-                <input
-                  className="input"
-                  value={props.registerValues.inviteCode}
-                  autoComplete="off"
-                  onInput={(e) =>
-                    props.onChangeRegister({ ...props.registerValues, inviteCode: (e.currentTarget as HTMLInputElement).value })
-                  }
-                />
-              </label>
+              <FloatingLabelInput
+                label={t('txt_invite_code_required')}
+                value={props.registerValues.inviteCode}
+                autoComplete="off"
+                onInput={(v) => props.onChangeRegister({ ...props.registerValues, inviteCode: v })}
+              />
             ) : null}
             <button type="submit" className="btn btn-primary full" disabled={registerBusy}>
               <UserPlus size={16} className="btn-icon" />
@@ -260,18 +249,15 @@ export default function AuthViews(props: AuthViewsProps) {
             </>
           ) : (
             <>
-          <label className="field">
-            <span>{t('txt_email')}</span>
-            <input
-              className="input"
-              type={props.relaxedLoginInput ? 'text' : 'email'}
-              value={props.loginValues.email}
-              autoComplete="username"
-              placeholder={props.authPlaceholder}
-              autoFocus
-              onInput={(e) => props.onChangeLogin({ ...props.loginValues, email: (e.currentTarget as HTMLInputElement).value })}
-            />
-          </label>
+          <FloatingLabelInput
+            label={t('txt_email')}
+            value={props.loginValues.email}
+            type={props.relaxedLoginInput ? 'text' : 'email'}
+            autoComplete="username"
+            placeholder={props.authPlaceholder}
+            autoFocus
+            onInput={(v) => props.onChangeLogin({ ...props.loginValues, email: v })}
+          />
           <PasswordField
             label={t('txt_master_password')}
             value={props.loginValues.password}

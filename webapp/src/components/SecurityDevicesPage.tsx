@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks';
 import { Clock3, Pencil, RefreshCw, ShieldCheck, ShieldOff, Trash2 } from 'lucide-preact';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { FloatingLabelInput } from '@/components/FloatingLabelInput';
 import LoadingState from '@/components/LoadingState';
 import PendingAuthRequestsPanel from '@/components/PendingAuthRequestsPanel';
 import type { AuthRequest, AuthorizedDevice } from '@/lib/types';
@@ -253,15 +254,11 @@ export default function SecurityDevicesPage(props: SecurityDevicesPageProps) {
           setDeviceNote('');
         }}
       >
-        <label className="field">
-          <span>{t('txt_device_note')}</span>
-          <input
-            className="input"
-            maxLength={128}
-            value={deviceNote}
-            onInput={(e) => setDeviceNote((e.currentTarget as HTMLInputElement).value)}
-          />
-        </label>
+        <FloatingLabelInput
+          label={t('txt_device_note')}
+          value={deviceNote}
+          onInput={(v) => setDeviceNote(v)}
+        />
       </ConfirmDialog>
     </>
   );

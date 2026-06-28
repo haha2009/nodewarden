@@ -1,4 +1,5 @@
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { FloatingLabelInput } from '@/components/FloatingLabelInput';
 import ToastHost from '@/components/ToastHost';
 import { t } from '@/lib/i18n';
 import type { ToastMessage } from '@/lib/types';
@@ -73,10 +74,7 @@ export default function AppGlobalOverlays(props: AppGlobalOverlaysProps) {
           </div>
         )}
       >
-        <label className="field">
-          <span>{t('txt_totp_code')}</span>
-          <input className="input" value={props.totpCode} autoComplete="one-time-code" onInput={(e) => props.onTotpCodeChange((e.currentTarget as HTMLInputElement).value)} />
-        </label>
+        <FloatingLabelInput label={t('txt_totp_code')} value={props.totpCode} autoComplete="one-time-code" onInput={(v) => props.onTotpCodeChange(v)} />
         <label className="check-line check-line-compact">
           <input type="checkbox" checked={props.rememberDevice} onChange={(e) => props.onRememberDeviceChange((e.currentTarget as HTMLInputElement).checked)} />
           <span>{t('txt_trust_this_device_for_30_days')}</span>

@@ -1,4 +1,5 @@
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { FloatingLabelInput } from '@/components/FloatingLabelInput';
 import type { Folder } from '@/lib/types';
 import { getFieldTypeOptions, getLinkedIdOptions, toBooleanFieldValue } from '@/components/vault/vault-page-helpers';
 import { t } from '@/lib/i18n';
@@ -88,14 +89,17 @@ export default function VaultDialogs(props: VaultDialogsProps) {
             ))}
           </select>
         </label>
-        <label className="field">
-          <span>{t('txt_field_label')}</span>
-          <input className="input" value={props.fieldLabel} onInput={(e) => props.onFieldLabelChange((e.currentTarget as HTMLInputElement).value)} />
-        </label>
-        <label className="field">
-          <span>{t('txt_field_group')}</span>
-          <input className="input" value={props.fieldGroup} placeholder={t('txt_field_group_placeholder')} onInput={(e) => props.onFieldGroupChange((e.currentTarget as HTMLInputElement).value)} />
-        </label>
+        <FloatingLabelInput
+          label={t('txt_field_label')}
+          value={props.fieldLabel}
+          onInput={(v) => props.onFieldLabelChange(v)}
+        />
+        <FloatingLabelInput
+          label={t('txt_field_group')}
+          value={props.fieldGroup}
+          placeholder={t('txt_field_group_placeholder')}
+          onInput={(v) => props.onFieldGroupChange(v)}
+        />
         {props.fieldType === 3 && (
           <label className="field">
             <span>{t('txt_linked_identity_field')}</span>
@@ -224,10 +228,11 @@ export default function VaultDialogs(props: VaultDialogsProps) {
         onConfirm={props.onConfirmCreateFolder}
         onCancel={props.onCancelCreateFolder}
       >
-        <label className="field">
-          <span>{t('txt_folder_name')}</span>
-          <input className="input" value={props.newFolderName} onInput={(e) => props.onNewFolderNameChange((e.currentTarget as HTMLInputElement).value)} />
-        </label>
+        <FloatingLabelInput
+          label={t('txt_folder_name')}
+          value={props.newFolderName}
+          onInput={(v) => props.onNewFolderNameChange(v)}
+        />
       </ConfirmDialog>
 
       <ConfirmDialog
@@ -241,10 +246,11 @@ export default function VaultDialogs(props: VaultDialogsProps) {
         onConfirm={props.onConfirmRenameFolder}
         onCancel={props.onCancelRenameFolder}
       >
-        <label className="field">
-          <span>{t('txt_folder_name')}</span>
-          <input className="input" value={props.renameFolderName} onInput={(e) => props.onRenameFolderNameChange((e.currentTarget as HTMLInputElement).value)} />
-        </label>
+        <FloatingLabelInput
+          label={t('txt_folder_name')}
+          value={props.renameFolderName}
+          onInput={(v) => props.onRenameFolderNameChange(v)}
+        />
       </ConfirmDialog>
 
       <ConfirmDialog

@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks';
 import { Eye, EyeOff, Send, X } from 'lucide-preact';
 import StandalonePageFrame from '@/components/StandalonePageFrame';
+import { FloatingLabelInput } from '@/components/FloatingLabelInput';
 import { t } from '@/lib/i18n';
 
 interface RecoverTwoFactorPageProps {
@@ -24,16 +25,13 @@ export default function RecoverTwoFactorPage(props: RecoverTwoFactorPageProps) {
         >
           <p className="muted standalone-muted">{t('txt_use_your_one_time_recovery_code_to_disable_two_step_verification')}</p>
 
-          <label className="field">
-            <span>{t('txt_email')}</span>
-            <input
-              className="input"
-              type="email"
-              value={props.values.email}
-              autoComplete="username"
-              onInput={(e) => props.onChange({ ...props.values, email: (e.currentTarget as HTMLInputElement).value })}
-            />
-          </label>
+          <FloatingLabelInput
+            label={t('txt_email')}
+            value={props.values.email}
+            type="email"
+            autoComplete="username"
+            onInput={(v) => props.onChange({ ...props.values, email: v })}
+          />
 
           <label className="field">
             <span>{t('txt_master_password')}</span>
@@ -51,15 +49,12 @@ export default function RecoverTwoFactorPage(props: RecoverTwoFactorPageProps) {
             </div>
           </label>
 
-          <label className="field">
-            <span>{t('txt_recovery_code')}</span>
-            <input
-              className="input"
-              value={props.values.recoveryCode}
-              autoComplete="one-time-code"
-              onInput={(e) => props.onChange({ ...props.values, recoveryCode: (e.currentTarget as HTMLInputElement).value.toUpperCase() })}
-            />
-          </label>
+          <FloatingLabelInput
+            label={t('txt_recovery_code')}
+            value={props.values.recoveryCode}
+            autoComplete="one-time-code"
+            onInput={(v) => props.onChange({ ...props.values, recoveryCode: v.toUpperCase() })}
+          />
 
           <div className="field-grid">
             <button type="submit" className="btn btn-primary">

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { CheckCheck, ChevronLeft, Copy, Eye, EyeOff, File, FileText, LayoutGrid, Pencil, Plus, RefreshCw, Save, Send as SendIcon, Trash2, X } from 'lucide-preact';
 import { copyTextToClipboard } from '@/lib/clipboard';
 import LoadingState from '@/components/LoadingState';
+import { FloatingLabelInput } from '@/components/FloatingLabelInput';
 import type { Send, SendDraft } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
@@ -419,10 +420,9 @@ export default function SendsPage(props: SendsPageProps) {
               <h3 className="detail-title">{isCreating ? t('txt_new_send') : t('txt_edit_send')}</h3>
               {!!props.uploadingSendFileName && <div className="detail-sub">{sendUploadLabel}</div>}
               <div className="field-grid">
-              <label className="field field-span-2">
-                <span>{t('txt_name')}</span>
-                <input className="input" value={draft.name} onInput={(e) => setDraft({ ...draft, name: (e.currentTarget as HTMLInputElement).value })} />
-              </label>
+              <div className="field-span-2">
+                <FloatingLabelInput label={t('txt_name')} value={draft.name} onInput={(v) => setDraft({ ...draft, name: v })} />
+              </div>
               <label className="field field-span-2">
                 <span>{t('txt_type')}</span>
                 <div className="send-options">
@@ -465,10 +465,11 @@ export default function SendsPage(props: SendsPageProps) {
                 <span>{t('txt_expiration_days_0_never')}</span>
                 <input className="input" type="number" min="0" max="3650" value={draft.expirationDays} onInput={(e) => setDraft({ ...draft, expirationDays: (e.currentTarget as HTMLInputElement).value })} />
               </label>
-              <label className="field">
-                <span>{t('txt_max_access_count')}</span>
-                <input className="input" value={draft.maxAccessCount} onInput={(e) => setDraft({ ...draft, maxAccessCount: (e.currentTarget as HTMLInputElement).value })} />
-              </label>
+              <FloatingLabelInput
+                label={t('txt_max_access_count')}
+                value={draft.maxAccessCount}
+                onInput={(v) => setDraft({ ...draft, maxAccessCount: v })}
+              />
               <label className="field">
                 <span>{t('txt_password')}</span>
                 <div className="password-wrap">
