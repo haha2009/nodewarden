@@ -429,7 +429,7 @@ export default function VaultEditor(props: VaultEditorProps) {
           </>
         )}
         {/* Name field — icon with logo label + name input */}
-        <div className="name-field-group">
+        <div className="name-field-group mt-4">
           <div className="name-field-row">
             <div className="name-field-icon-col">
               <span className="name-icon-box" aria-hidden="true" onClick={props.isCreating ? handleIconUpload : undefined}>
@@ -449,7 +449,6 @@ export default function VaultEditor(props: VaultEditorProps) {
               <FloatingLabelInput
                 label={t('txt_name')}
                 value={props.draft.name}
-                placeholder={t('txt_enter_name_placeholder')}
                 onInput={(v) => props.onUpdateDraft({ name: v })}
               />
             </div>
