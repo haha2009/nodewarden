@@ -659,6 +659,7 @@ const en: Record<string, string> = {
   "txt_third_party_account_placeholder": "Email, ID, or username for this platform",
   "txt_passkey": "Passkey",
   "txt_passkeys": "Passkeys",
+  "txt_login_info": "Login Info",
   "txt_passkey_created_at_value": "Created on {value}",
   "txt_account_passkey": "Account passkey",
   "txt_account_passkeys": "Account passkeys",

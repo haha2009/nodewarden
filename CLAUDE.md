@@ -58,9 +58,10 @@ npm run i18n:validate    # 验证 i18n 翻译完整性
 
 ## Dev Server Workflow
 - `wrangler dev` 从 `./dist/` 提供静态文件，不自动检测 webapp 源码变更
-- 修改 `webapp/src/` 后必须执行：`npm run build` → 重启 `npm run dev` 进程
-- 流程：`pkill -f "nodewarden.*dev"` → `npm run build` → `npm run dev &`
-- 每次改完都要等用户验收，再继续下一步
+- 修改 `webapp/src/` 后必须重启服务让用户验收
+- 流程：`pkill -f "wrangler"` → `npm run build` → `npm run dev &`（后台运行）
+- wrangler 的 custom build 会在源码变更时自动触发 `npm run build`，但构建完成后需重启 Worker 才能加载新 dist
+- 每次前端改动后统一重启服务，刷新浏览器验收
 
 ## Before Asking Questions
 1. Read CONTRIBUTING.md — 它有详细的敏感区域指南

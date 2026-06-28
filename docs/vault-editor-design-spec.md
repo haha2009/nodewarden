@@ -218,11 +218,12 @@ section:last-child {
 /* 字段标签 — 所有页面统一 */
 .field > span,
 .name-field-label {
-  display: block;
-  margin: 0 0 6px;
-  font-size: 13px;
-  font-weight: 700;
+  @apply mb-2 block;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
   color: var(--muted-strong);
+  line-height: var(--leading-snug);
 }
 ```
 

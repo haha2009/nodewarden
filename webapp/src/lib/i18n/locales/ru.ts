@@ -633,6 +633,7 @@ const ru: Record<string, string> = {
   "txt_password_hint_too_long": "Подсказка к паролю должна содержать не более 120 символов.",
   "txt_passkey": "Ключ доступа",
   "txt_passkeys": "Ключи доступа",
+  "txt_login_info": "Данные для входа",
   "txt_passkey_created_at_value": "Создано {value}",
   "txt_account_passkey": "Ключ доступа аккаунта",
   "txt_account_passkeys": "Ключи доступа аккаунта",

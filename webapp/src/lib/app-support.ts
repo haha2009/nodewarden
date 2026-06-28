@@ -152,6 +152,8 @@ function buildEmptyImportDraft(type: number): VaultDraft {
     sshFingerprint: '',
     customFields: [],
     groups: [],
+    groupsTitle: '',
+    groupsDescription: '',
   };
 }
 

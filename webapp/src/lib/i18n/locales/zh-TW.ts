@@ -633,6 +633,7 @@ const zhTW: Record<string, string> = {
   "txt_password_hint_too_long": "密碼提示最多隻能輸入 120 個字符",
   "txt_passkey": "通行密鑰",
   "txt_passkeys": "通行密鑰",
+  "txt_login_info": "登入資訊",
   "txt_passkey_created_at_value": "創建於 {value}",
   "txt_account_passkey": "賬號通行密鑰",
   "txt_account_passkeys": "賬號通行密鑰",

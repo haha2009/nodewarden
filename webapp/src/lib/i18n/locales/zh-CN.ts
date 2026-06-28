@@ -659,6 +659,7 @@ const zhCN: Record<string, string> = {
   "txt_third_party_account_placeholder": "该平台的邮箱、ID 或用户名",
   "txt_passkey": "通行密钥",
   "txt_passkeys": "通行密钥",
+  "txt_login_info": "登录信息",
   "txt_passkey_created_at_value": "创建于 {value}",
   "txt_account_passkey": "账号通行密钥",
   "txt_account_passkeys": "账号通行密钥",

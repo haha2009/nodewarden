@@ -633,6 +633,7 @@ const es: Record<string, string> = {
   "txt_password_hint_too_long": "La pista de contraseña debe tener 120 caracteres o menos",
   "txt_passkey": "Clave de acceso",
   "txt_passkeys": "Claves de acceso",
+  "txt_login_info": "Información de inicio de sesión",
   "txt_passkey_created_at_value": "Creado el {value}",
   "txt_account_passkey": "Clave de acceso de cuenta",
   "txt_account_passkeys": "Claves de acceso de cuenta",

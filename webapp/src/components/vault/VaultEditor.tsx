@@ -24,6 +24,7 @@ import {
   suggestNameFromUrl,
   toBooleanFieldValue,
 } from '@/components/vault/vault-page-helpers';
+import { FloatingLabelInput } from '@/components/FloatingLabelInput';
 import WebsiteIcon from '@/components/vault/WebsiteIcon';
 import { beginWebsiteIconLoad } from '@/lib/website-icon-cache';
 import { hostFromUri, websiteIconUrl } from '@/components/vault/vault-page-helpers';
@@ -422,18 +423,15 @@ export default function VaultEditor(props: VaultEditorProps) {
                 </button>
               </div>
             </label>
-            <label className="field">
-              <span>{t('txt_website_login_page')}</span>
-              <input
-                className="input"
-                value={props.draft.loginUris[1]?.uri || ''}
-                onInput={(e) => {
-                  props.onUpdateDraftLoginUri(1, (e.currentTarget as HTMLInputElement).value);
-                  if (props.draft.loginUris[1]?.match !== 1) props.onUpdateDraftLoginUriMatch(1, 1);
-                }}
-                placeholder="https://example.com"
-              />
-            </label>
+            <FloatingLabelInput
+              label={t('txt_website_login_page')}
+              value={props.draft.loginUris[1]?.uri || ''}
+              placeholder="https://example.com"
+              onInput={(v) => {
+                props.onUpdateDraftLoginUri(1, v);
+                if (props.draft.loginUris[1]?.match !== 1) props.onUpdateDraftLoginUriMatch(1, 1);
+              }}
+            />
           </>
         )}
         {/* Name field — icon with logo label + name input */}
@@ -465,8 +463,18 @@ export default function VaultEditor(props: VaultEditorProps) {
             </div>
           </div>
         </div>
-        {/* Login type selector: password login or third-party login */}
-        {props.draft.type === 1 && (
+      </div>
+
+      {/* Login Info card — password/third-party login fields + TOTP */}
+      {props.draft.type === 1 && (
+        <div className="card">
+          <div className="section-head">
+            <h4>{t('txt_login_info')}</h4>
+            <button type="button" className="btn btn-secondary small" onClick={props.onAddGroup}>
+              <Plus size={14} className="btn-icon" /> {t('txt_add_group')}
+            </button>
+          </div>
+          {/* Login type selector: password login or third-party login */}
           <div className="segmented-control">
             <button
               type="button"
@@ -485,151 +493,121 @@ export default function VaultEditor(props: VaultEditorProps) {
               {t('txt_third_party_login')}
             </button>
           </div>
-        )}
-        {/* Password login fields */}
-        {props.draft.type === 1 && props.draft.loginType === 'password' && (
-          <>
-            <label className="field">
-              <span>{t('txt_username')}</span>
-              <input className="input" value={props.draft.loginUsername} onInput={(e) => props.onUpdateDraft({ loginUsername: (e.currentTarget as HTMLInputElement).value })} />
-            </label>
-            <label className="field">
-              <span>{t('txt_password')}</span>
-              <div className="leading-input-inner">
+          {/* Password login fields */}
+          {props.draft.loginType === 'password' && (
+            <>
+              <FloatingLabelInput
+                label={t('txt_username')}
+                value={props.draft.loginUsername}
+                onInput={(v) => props.onUpdateDraft({ loginUsername: v })}
+              />
+              <label className="field">
+                <span>{t('txt_password')}</span>
+                <div className="leading-input-inner">
                   <input
                     className="input"
                     type={showPassword ? 'text' : 'password'}
                     value={props.draft.loginPassword}
                     onInput={(e) => props.onUpdateDraft({ loginPassword: (e.currentTarget as HTMLInputElement).value })}
                   />
-                  <button
-                    type="button"
-                    className="input-icon-btn"
-                    title={t('txt_generate_password')}
-                    aria-label={t('txt_generate_password')}
-                    onClick={openGeneratorDialog}
-                  >
+                  <button type="button" className="input-icon-btn" title={t('txt_generate_password')} aria-label={t('txt_generate_password')} onClick={openGeneratorDialog}>
                     <RefreshCw size={16} />
                   </button>
-                  <button
-                    type="button"
-                    className={`input-icon-btn ${copied ? 'pw-copied' : ''}`}
-                    title={copied ? t('txt_copied') : t('txt_copy_password')}
-                    aria-label={copied ? t('txt_copied') : t('txt_copy_password')}
-                    onClick={copyPassword}
-                    disabled={!props.draft.loginPassword}
-                  >
+                  <button type="button" className={`input-icon-btn ${copied ? 'pw-copied' : ''}`} title={copied ? t('txt_copied') : t('txt_copy_password')} aria-label={copied ? t('txt_copied') : t('txt_copy_password')} onClick={copyPassword} disabled={!props.draft.loginPassword}>
                     {copied ? <CheckCheck size={16} /> : <Copy size={16} />}
                   </button>
-                  <button
-                    type="button"
-                    className="input-icon-btn"
-                    title={showPassword ? t('txt_hide_password') : t('txt_show_password')}
-                    aria-label={showPassword ? t('txt_hide_password') : t('txt_show_password')}
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
+                  <button type="button" className="input-icon-btn" title={showPassword ? t('txt_hide_password') : t('txt_show_password')} aria-label={showPassword ? t('txt_hide_password') : t('txt_show_password')} onClick={() => setShowPassword(!showPassword)}>
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-            </label>
-          </>
-        )}
-        {/* Third-party login fields */}
-        {props.draft.type === 1 && props.draft.loginType === 'third_party' && (
-          <div className="platform-select-row">
-            <PlatformIcon platform={props.draft.thirdPartyPlatform} />
-            <select className="input" value={props.draft.thirdPartyPlatform} onInput={(e) => props.onUpdateDraft({ thirdPartyPlatform: (e.currentTarget as HTMLSelectElement).value })}>
-              <option value="">{t('txt_select_platform')}</option>
-              <option value="google">Google</option>
-              <option value="apple">Apple</option>
-              <option value="microsoft">Microsoft</option>
-              <option value="twitter">Twitter / X</option>
-              <option value="facebook">Facebook</option>
-              <option value="github">GitHub</option>
-              <option value="discord">Discord</option>
-              <option value="telegram">Telegram</option>
-              <option value="wechat">WeChat</option>
-              <option value="qq">QQ</option>
-              <option value="weibo">Weibo</option>
-            </select>
-          </div>
-        )}
-        {/* Common login fields for both types */}
-        {props.draft.type === 1 && (
-          <>
-            <label className="field">
-              <span>{t('txt_totp_secret')}</span>
-              <div className="input-action-wrap">
-                <input className="input" value={props.draft.loginTotp} onInput={(e) => props.onUpdateDraft({ loginTotp: (e.currentTarget as HTMLInputElement).value })} />
-                <button
-                  type="button"
-                  className="input-icon-btn"
-                  title={t('txt_scan_totp_qr')}
-                  aria-label={t('txt_scan_totp_qr')}
-                  disabled={props.busy}
-                  onClick={() => {
-                    setTotpQrStatus('');
-                    setTotpQrOpen(true);
-                  }}
-                >
-                  <QrCode size={18} className="btn-icon" />
-                </button>
+              </label>
+            </>
+          )}
+          {/* Third-party login fields */}
+          {props.draft.loginType === 'third_party' && (
+            <div className="platform-select-row">
+              <PlatformIcon platform={props.draft.thirdPartyPlatform} />
+              <select className="input" value={props.draft.thirdPartyPlatform} onInput={(e) => props.onUpdateDraft({ thirdPartyPlatform: (e.currentTarget as HTMLSelectElement).value })}>
+                <option value="">{t('txt_select_platform')}</option>
+                <option value="google">Google</option>
+                <option value="apple">Apple</option>
+                <option value="microsoft">Microsoft</option>
+                <option value="twitter">Twitter / X</option>
+                <option value="facebook">Facebook</option>
+                <option value="github">GitHub</option>
+                <option value="discord">Discord</option>
+                <option value="telegram">Telegram</option>
+                <option value="wechat">WeChat</option>
+                <option value="qq">QQ</option>
+                <option value="weibo">Weibo</option>
+              </select>
+            </div>
+          )}
+          {/* TOTP */}
+          <label className="field">
+            <span>{t('txt_totp_secret')}</span>
+            <div className="input-action-wrap">
+              <input className="input" value={props.draft.loginTotp} onInput={(e) => props.onUpdateDraft({ loginTotp: (e.currentTarget as HTMLInputElement).value })} />
+              <button type="button" className="input-icon-btn" title={t('txt_scan_totp_qr')} aria-label={t('txt_scan_totp_qr')} disabled={props.busy} onClick={() => { setTotpQrStatus(''); setTotpQrOpen(true); }}>
+                <QrCode size={18} className="btn-icon" />
+              </button>
+            </div>
+          </label>
+          {/* Passkeys */}
+          {props.draft.loginFido2Credentials.length > 0 && (
+            <>
+              <div className="section-head passkeys-section-head">
+                <h4>{t('txt_passkeys')}</h4>
               </div>
-            </label>
-            {props.draft.loginFido2Credentials.length > 0 && (
-              <>
-                <div className="section-head passkeys-section-head">
-                  <h4>{t('txt_passkeys')}</h4>
-                </div>
-                <div className="attachment-list">
-                  {props.draft.loginFido2Credentials.map((credential, index) => {
-                    const createdAt = String(credential?.creationDate || '').trim();
-                    const label = createdAt
-                      ? t('txt_passkey_created_at_value', { value: formatHistoryTime(createdAt) })
-                      : t('txt_passkey');
-                    return (
-                      <div key={`login-passkey-${index}`} className="attachment-row">
-                        <div className="attachment-main">
-                          <div className="attachment-text">
-                            <strong>{t('txt_passkey')}</strong>
-                            <span>{label}</span>
-                          </div>
-                        </div>
-                        <div className="kv-actions">
-                          <button
-                            type="button"
-                            className="btn btn-secondary small"
-                            disabled={props.busy}
-                            onClick={() => props.onRequestDeleteLoginPasskey(index)}
-                          >
-                            <X size={14} className="btn-icon" />
-                            {t('txt_remove')}
-                          </button>
+              <div className="attachment-list">
+                {props.draft.loginFido2Credentials.map((credential, index) => {
+                  const createdAt = String(credential?.creationDate || '').trim();
+                  const label = createdAt
+                    ? t('txt_passkey_created_at_value', { value: formatHistoryTime(createdAt) })
+                    : t('txt_passkey');
+                  return (
+                    <div key={`login-passkey-${index}`} className="attachment-row">
+                      <div className="attachment-main">
+                        <div className="attachment-text">
+                          <strong>{t('txt_passkey')}</strong>
+                          <span>{label}</span>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </>
-        )}
-      </div>
+                      <div className="kv-actions">
+                        <button type="button" className="btn btn-secondary small" disabled={props.busy} onClick={() => props.onRequestDeleteLoginPasskey(index)}>
+                          <X size={14} className="btn-icon" />
+                          {t('txt_remove')}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
-      {/* Login Groups — multi-account management */}
+      {/* Login Groups — multi-account management (hidden by default, shown when groups exist) */}
       {props.draft.type === 1 && (() => {
         const groups = props.draft.groups || [];
+        if (groups.length === 0) return null;
         return (
           <div className="card">
             <div className="section-head">
-              <h4>{t('txt_groups')}</h4>
-              <button type="button" className="btn btn-secondary small" onClick={props.onAddGroup}>
-                <Plus size={14} className="btn-icon" /> {t('txt_add_group')}
-              </button>
+              <input
+                className="input group-title-input"
+                value={props.draft.groupsTitle}
+                onInput={(e) => props.onUpdateDraft({ groupsTitle: (e.currentTarget as HTMLInputElement).value })}
+                placeholder={t('txt_groups')}
+              />
             </div>
-            {groups.length === 0 && (
-              <div className="detail-sub">{t('txt_add_group_hint')}</div>
-            )}
+            <FloatingLabelInput
+              label={t('txt_group_description')}
+              value={props.draft.groupsDescription}
+              placeholder={t('txt_group_description_placeholder')}
+              onInput={(v) => props.onUpdateDraft({ groupsDescription: v })}
+            />
             {groups.map((group, groupIndex) => {
               const [collapsed, setCollapsed] = useState(false);
               const hasLoginData = group.logins.some(l => l.username || l.password || l.thirdPartyPlatform);
@@ -667,27 +645,23 @@ export default function VaultEditor(props: VaultEditorProps) {
                   </div>
                   {!collapsed && (
                     <div className="group-body">
-                      <label className="field field-compact">
-                        <span>{t('txt_group_description')}</span>
-                        <input
-                          className="input"
-                          value={group.description}
-                          onInput={(e) => {
-                            const value = (e.currentTarget as HTMLInputElement).value;
-                            const updated = [...groups];
-                            updated[groupIndex] = { ...updated[groupIndex], description: value };
-                            props.onUpdateGroups(updated);
-                          }}
-                          placeholder={t('txt_group_description_placeholder')}
-                        />
-                      </label>
+                      <FloatingLabelInput
+                        label={t('txt_group_description')}
+                        value={group.description}
+                        placeholder={t('txt_group_description_placeholder')}
+                        onInput={(v) => {
+                          const updated = [...groups];
+                          updated[groupIndex] = { ...updated[groupIndex], description: v };
+                          props.onUpdateGroups(updated);
+                        }}
+                      />
 
                       {/* Logins */}
                       <div className="group-logins-label">{t('txt_group_logins')}</div>
                       {group.logins.map((login, loginIndex) => (
                         <div key={login.id} className="group-login-card">
                           <div className="group-login-head">
-                            <div className="group-login-type-switch">
+                            <div className="segmented-control">
                               <button
                                 type="button"
                                 className={`segmented-btn ${login.loginType === 'password' ? 'active' : ''}`}
@@ -698,7 +672,8 @@ export default function VaultEditor(props: VaultEditorProps) {
                                   props.onUpdateGroups(updated);
                                 }}
                               >
-                                {t('txt_add_password_login')}
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+                                {t('txt_password_login')}
                               </button>
                               <button
                                 type="button"
@@ -710,7 +685,8 @@ export default function VaultEditor(props: VaultEditorProps) {
                                   props.onUpdateGroups(updated);
                                 }}
                               >
-                                {t('txt_add_third_party_login')}
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                                {t('txt_third_party_login')}
                               </button>
                             </div>
                             <button
@@ -723,15 +699,15 @@ export default function VaultEditor(props: VaultEditorProps) {
                           </div>
                           {login.loginType === 'password' ? (
                             <>
-                              <label className="field field-compact">
-                                <span>{t('txt_username')}</span>
-                                <input className="input" value={login.username} onInput={(e) => {
-                                  const value = (e.currentTarget as HTMLInputElement).value;
+                              <FloatingLabelInput
+                                label={t('txt_username')}
+                                value={login.username}
+                                onInput={(v) => {
                                   const updated = [...groups];
-                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, username: value } : l) };
+                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, username: v } : l) };
                                   props.onUpdateGroups(updated);
-                                }} />
-                              </label>
+                                }}
+                              />
                               <label className="field field-compact">
                                 <span>{t('txt_password')}</span>
                                 <div className="leading-input-inner">
@@ -751,15 +727,15 @@ export default function VaultEditor(props: VaultEditorProps) {
                                   </button>
                                 </div>
                               </label>
-                              <label className="field field-compact">
-                                <span>{t('txt_totp_secret')}</span>
-                                <input className="input" value={login.totp} onInput={(e) => {
-                                  const value = (e.currentTarget as HTMLInputElement).value;
+                              <FloatingLabelInput
+                                label={t('txt_totp_secret')}
+                                value={login.totp}
+                                onInput={(v) => {
                                   const updated = [...groups];
-                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, totp: value } : l) };
+                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, totp: v } : l) };
                                   props.onUpdateGroups(updated);
-                                }} />
-                              </label>
+                                }}
+                              />
                             </>
                           ) : (
                             <>
@@ -785,15 +761,15 @@ export default function VaultEditor(props: VaultEditorProps) {
                                   <option value="weibo">Weibo</option>
                                 </select>
                               </label>
-                              <label className="field field-compact">
-                                <span>{t('txt_third_party_account')}</span>
-                                <input className="input" value={login.thirdPartyAccount} onInput={(e) => {
-                                  const value = (e.currentTarget as HTMLInputElement).value;
+                              <FloatingLabelInput
+                                label={t('txt_third_party_account')}
+                                value={login.thirdPartyAccount}
+                                onInput={(v) => {
                                   const updated = [...groups];
-                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, thirdPartyAccount: value } : l) };
+                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, thirdPartyAccount: v } : l) };
                                   props.onUpdateGroups(updated);
-                                }} />
-                              </label>
+                                }}
+                              />
                             </>
                           )}
                         </div>
@@ -877,9 +853,6 @@ export default function VaultEditor(props: VaultEditorProps) {
                 </div>
               );
             })}
-            <button type="button" className="btn btn-secondary full group-add-group-btn" onClick={props.onAddGroup}>
-              <Plus size={14} className="btn-icon" /> {t('txt_add_group')}
-            </button>
           </div>
         );
       })()}
@@ -888,22 +861,18 @@ export default function VaultEditor(props: VaultEditorProps) {
         <div className="card">
           <h4>{t('txt_card_details')}</h4>
           <div className="field-grid">
-            <label className="field"><span>{t('txt_cardholder_name')}</span><input className="input" value={props.draft.cardholderName} onInput={(e) => props.onUpdateDraft({ cardholderName: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field">
-              <span>{t('txt_number')}</span>
-              <input
-                className="input"
-                value={props.draft.cardNumber}
-                onInput={(e) => {
-                  const value = (e.currentTarget as HTMLInputElement).value;
-                  const detectedBrand = normalizeCardBrand(cardBrand(value) || '');
-                  props.onUpdateDraft({
-                    cardNumber: value,
-                    ...(props.draft.cardBrand ? {} : { cardBrand: detectedBrand }),
-                  });
-                }}
-              />
-            </label>
+            <FloatingLabelInput label={t('txt_cardholder_name')} value={props.draft.cardholderName} onInput={(v) => props.onUpdateDraft({ cardholderName: v })} />
+            <FloatingLabelInput
+              label={t('txt_number')}
+              value={props.draft.cardNumber}
+              onInput={(v) => {
+                const detectedBrand = normalizeCardBrand(cardBrand(v) || '');
+                props.onUpdateDraft({
+                  cardNumber: v,
+                  ...(props.draft.cardBrand ? {} : { cardBrand: detectedBrand }),
+                });
+              }}
+            />
             <label className="field">
               <span>{t('txt_brand')}</span>
               <div className="card-brand-select-row">
@@ -920,9 +889,9 @@ export default function VaultEditor(props: VaultEditorProps) {
                 </select>
               </div>
             </label>
-            <label className="field"><span>{t('txt_security_code_cvv')}</span><input className="input" value={props.draft.cardCode} onInput={(e) => props.onUpdateDraft({ cardCode: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_expiry_month')}</span><input className="input" value={props.draft.cardExpMonth} onInput={(e) => props.onUpdateDraft({ cardExpMonth: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_expiry_year')}</span><input className="input" value={props.draft.cardExpYear} onInput={(e) => props.onUpdateDraft({ cardExpYear: (e.currentTarget as HTMLInputElement).value })} /></label>
+            <FloatingLabelInput label={t('txt_security_code_cvv')} value={props.draft.cardCode} onInput={(v) => props.onUpdateDraft({ cardCode: v })} />
+            <FloatingLabelInput label={t('txt_expiry_month')} value={props.draft.cardExpMonth} onInput={(v) => props.onUpdateDraft({ cardExpMonth: v })} />
+            <FloatingLabelInput label={t('txt_expiry_year')} value={props.draft.cardExpYear} onInput={(v) => props.onUpdateDraft({ cardExpYear: v })} />
           </div>
         </div>
       )}
@@ -931,24 +900,24 @@ export default function VaultEditor(props: VaultEditorProps) {
         <div className="card">
           <h4>{t('txt_identity_details')}</h4>
           <div className="field-grid">
-            <label className="field"><span>{t('txt_title')}</span><input className="input" value={props.draft.identTitle} onInput={(e) => props.onUpdateDraft({ identTitle: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_first_name')}</span><input className="input" value={props.draft.identFirstName} onInput={(e) => props.onUpdateDraft({ identFirstName: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_middle_name')}</span><input className="input" value={props.draft.identMiddleName} onInput={(e) => props.onUpdateDraft({ identMiddleName: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_last_name')}</span><input className="input" value={props.draft.identLastName} onInput={(e) => props.onUpdateDraft({ identLastName: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_username')}</span><input className="input" value={props.draft.identUsername} onInput={(e) => props.onUpdateDraft({ identUsername: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_company')}</span><input className="input" value={props.draft.identCompany} onInput={(e) => props.onUpdateDraft({ identCompany: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_ssn')}</span><input className="input" value={props.draft.identSsn} onInput={(e) => props.onUpdateDraft({ identSsn: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_passport_number')}</span><input className="input" value={props.draft.identPassportNumber} onInput={(e) => props.onUpdateDraft({ identPassportNumber: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_license_number')}</span><input className="input" value={props.draft.identLicenseNumber} onInput={(e) => props.onUpdateDraft({ identLicenseNumber: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_email')}</span><input className="input" value={props.draft.identEmail} onInput={(e) => props.onUpdateDraft({ identEmail: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_phone')}</span><input className="input" value={props.draft.identPhone} onInput={(e) => props.onUpdateDraft({ identPhone: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_address_1')}</span><input className="input" value={props.draft.identAddress1} onInput={(e) => props.onUpdateDraft({ identAddress1: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_address_2')}</span><input className="input" value={props.draft.identAddress2} onInput={(e) => props.onUpdateDraft({ identAddress2: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_address_3')}</span><input className="input" value={props.draft.identAddress3} onInput={(e) => props.onUpdateDraft({ identAddress3: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_city_town')}</span><input className="input" value={props.draft.identCity} onInput={(e) => props.onUpdateDraft({ identCity: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_state_province')}</span><input className="input" value={props.draft.identState} onInput={(e) => props.onUpdateDraft({ identState: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_postal_code')}</span><input className="input" value={props.draft.identPostalCode} onInput={(e) => props.onUpdateDraft({ identPostalCode: (e.currentTarget as HTMLInputElement).value })} /></label>
-            <label className="field"><span>{t('txt_country')}</span><input className="input" value={props.draft.identCountry} onInput={(e) => props.onUpdateDraft({ identCountry: (e.currentTarget as HTMLInputElement).value })} /></label>
+            <FloatingLabelInput label={t('txt_title')} value={props.draft.identTitle} onInput={(v) => props.onUpdateDraft({ identTitle: v })} />
+            <FloatingLabelInput label={t('txt_first_name')} value={props.draft.identFirstName} onInput={(v) => props.onUpdateDraft({ identFirstName: v })} />
+            <FloatingLabelInput label={t('txt_middle_name')} value={props.draft.identMiddleName} onInput={(v) => props.onUpdateDraft({ identMiddleName: v })} />
+            <FloatingLabelInput label={t('txt_last_name')} value={props.draft.identLastName} onInput={(v) => props.onUpdateDraft({ identLastName: v })} />
+            <FloatingLabelInput label={t('txt_username')} value={props.draft.identUsername} onInput={(v) => props.onUpdateDraft({ identUsername: v })} />
+            <FloatingLabelInput label={t('txt_company')} value={props.draft.identCompany} onInput={(v) => props.onUpdateDraft({ identCompany: v })} />
+            <FloatingLabelInput label={t('txt_ssn')} value={props.draft.identSsn} onInput={(v) => props.onUpdateDraft({ identSsn: v })} />
+            <FloatingLabelInput label={t('txt_passport_number')} value={props.draft.identPassportNumber} onInput={(v) => props.onUpdateDraft({ identPassportNumber: v })} />
+            <FloatingLabelInput label={t('txt_license_number')} value={props.draft.identLicenseNumber} onInput={(v) => props.onUpdateDraft({ identLicenseNumber: v })} />
+            <FloatingLabelInput label={t('txt_email')} value={props.draft.identEmail} onInput={(v) => props.onUpdateDraft({ identEmail: v })} />
+            <FloatingLabelInput label={t('txt_phone')} value={props.draft.identPhone} onInput={(v) => props.onUpdateDraft({ identPhone: v })} />
+            <FloatingLabelInput label={t('txt_address_1')} value={props.draft.identAddress1} onInput={(v) => props.onUpdateDraft({ identAddress1: v })} />
+            <FloatingLabelInput label={t('txt_address_2')} value={props.draft.identAddress2} onInput={(v) => props.onUpdateDraft({ identAddress2: v })} />
+            <FloatingLabelInput label={t('txt_address_3')} value={props.draft.identAddress3} onInput={(v) => props.onUpdateDraft({ identAddress3: v })} />
+            <FloatingLabelInput label={t('txt_city_town')} value={props.draft.identCity} onInput={(v) => props.onUpdateDraft({ identCity: v })} />
+            <FloatingLabelInput label={t('txt_state_province')} value={props.draft.identState} onInput={(v) => props.onUpdateDraft({ identState: v })} />
+            <FloatingLabelInput label={t('txt_postal_code')} value={props.draft.identPostalCode} onInput={(v) => props.onUpdateDraft({ identPostalCode: v })} />
+            <FloatingLabelInput label={t('txt_country')} value={props.draft.identCountry} onInput={(v) => props.onUpdateDraft({ identCountry: v })} />
           </div>
         </div>
       )}
@@ -1170,14 +1139,8 @@ export default function VaultEditor(props: VaultEditorProps) {
                     </button>
                   </div>
                   <div className="custom-field-main">
-                    <label className="field custom-field-label">
-                      <span>{t('txt_field_label')}</span>
-                      <input className="input" value={field.label} onInput={(e) => props.onPatchDraftCustomField(index, { label: (e.currentTarget as HTMLInputElement).value })} />
-                    </label>
-                    <label className="field custom-field-group-input">
-                      <span>{t('txt_field_group')}</span>
-                      <input className="input" value={field.group || ''} placeholder={t('txt_field_group_placeholder')} onInput={(e) => props.onPatchDraftCustomField(index, { group: (e.currentTarget as HTMLInputElement).value || undefined })} />
-                    </label>
+                    <FloatingLabelInput label={t('txt_field_label')} value={field.label} onInput={(v) => props.onPatchDraftCustomField(index, { label: v })} />
+                    <FloatingLabelInput label={t('txt_field_group')} value={field.group || ''} placeholder={t('txt_field_group_placeholder')} onInput={(v) => props.onPatchDraftCustomField(index, { group: v || undefined })} />
                     <div className="custom-field-body">
                       <div className="custom-field-value">
                         {field.type === 3 ? (

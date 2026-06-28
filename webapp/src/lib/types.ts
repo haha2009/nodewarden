@@ -318,6 +318,8 @@ export interface VaultDraft {
   sshFingerprint: string;
   customFields: VaultDraftField[];
   groups: VaultDraftGroup[];
+  groupsTitle: string;
+  groupsDescription: string;
 }
 
 export interface ListResponse<T> {

@@ -619,6 +619,8 @@ export function createEmptyDraft(type: number): VaultDraft {
     sshFingerprint: '',
     customFields: [],
     groups: [],
+    groupsTitle: '',
+    groupsDescription: '',
   };
 }
 
@@ -718,6 +720,8 @@ export function draftFromCipher(cipher: Cipher): VaultDraft {
       defaultGroup.name = t('txt_default_group');
       defaultGroup.logins = [defaultLogin];
       draft.groups = [defaultGroup];
+      draft.groupsTitle = t('txt_groups');
+      draft.groupsDescription = '';
     }
   }
 

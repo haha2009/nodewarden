@@ -1163,15 +1163,16 @@
 }
 
 .name-field-group {
-  @apply mb-4;
+  @apply mt-2 mb-4;
 }
 
 .name-field-label {
-  display: block;
-  margin: 0 0 6px;
-  font-size: 13px;
-  font-weight: 700;
+  @apply mb-2 block;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
   color: var(--muted-strong);
+  line-height: var(--leading-snug);
 }
 
 .name-field-row {
@@ -1227,6 +1228,127 @@
   gap: 0;
 }
 
+/* Group card — nested card inside Groups card, follows list-item pattern */
+.group-card {
+  @apply mb-3 rounded-lg border;
+  border-color: var(--line-soft);
+  background: var(--panel-soft);
+}
+.group-card:last-child {
+  @apply mb-0;
+}
+
+.group-title-input {
+  @apply h-9 flex-1 rounded-lg border px-3 text-base font-bold;
+  border-color: transparent;
+  background: transparent;
+  color: var(--text);
+}
+.group-title-input:focus {
+  border-color: var(--primary);
+  background: var(--panel);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+.group-title-input::placeholder {
+  color: var(--muted-strong);
+  font-weight: 700;
+}
+
+.group-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.group-collapse-btn {
+  @apply grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-md border-0 bg-transparent;
+  color: var(--muted);
+  transition: color var(--dur-fast) var(--ease-smooth);
+}
+.group-collapse-btn:hover {
+  color: var(--text);
+}
+
+.group-name-input {
+  @apply h-9 flex-1 rounded-lg border px-3 text-sm;
+  border-color: transparent;
+  background: transparent;
+}
+.group-name-input:focus {
+  border-color: var(--primary);
+  background: var(--panel);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.group-remove-btn {
+  @apply shrink-0;
+}
+
+.group-body {
+  padding: 4px 12px 12px;
+}
+
+.group-logins-label,
+.group-section-label {
+  margin: 8px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.group-login-card {
+  @apply mb-3 rounded-lg border p-3;
+  border-color: var(--line);
+  background: var(--panel);
+}
+.group-login-card:last-child {
+  @apply mb-0;
+}
+
+.group-login-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.group-login-type-switch {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.group-custom-field-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.group-custom-field-row:last-child {
+  margin-bottom: 0;
+}
+.group-custom-field-row .input {
+  @apply h-9 text-sm;
+}
+
+.group-attachment-list {
+  @apply mt-1;
+}
+
+.group-add-login-btn,
+.group-add-field-btn,
+.group-add-attachment-btn {
+  @apply mt-2;
+}
+
+.group-add-group-btn {
+  @apply mt-3;
+}
+
+.passkeys-section-head {
+  margin: 8px 0 4px;
+}
 
 .extra-websites-list {
   margin-top: var(--space-3);

@@ -566,6 +566,8 @@ function draftFromDecryptedCipher(cipher: Cipher): VaultDraft {
     sshFingerprint: '',
     customFields: [],
     groups: [],
+    groupsTitle: '',
+    groupsDescription: '',
   };
 
   draft.customFields = (cipher.fields || [])
