@@ -607,6 +607,7 @@ const zhCN: Record<string, string> = {
   "txt_no_devices_found": "未找到设备",
   "txt_no_custom_fields": "暂无自定义字段，点击添加字段来添加。",
   "txt_no_folder": "无文件夹",
+  "txt_no_attachments_yet": "暂无附件",
   "txt_no_invites_found": "暂无邀请码",
   "txt_no_items": "没有项目",
   "txt_no_users_found": "暂无用户",

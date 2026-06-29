@@ -9,6 +9,8 @@ export interface FloatingFieldsetProps {
   onSave: (newLabel: string) => void;
   /** Placeholder for the edit input */
   placeholder?: string;
+  /** Optional element shown next to the title (e.g. favorite button) */
+  titleAccessory?: ComponentChildren;
   /** Card content */
   children: ComponentChildren;
 }
@@ -57,27 +59,21 @@ export function FloatingFieldset(props: FloatingFieldsetProps) {
     }
   }, [editing]);
 
-  const floating = draft.length > 0;
-
   return (
     <fieldset className="fieldset-floating">
       {editing ? (
-        <legend className="fieldset-floating-legend is-editing">
-          <label
-            className={`field field-floating${floating ? ' is-floating' : ''}`}
-            style={{ '--suffix-btn-count': '2' }}
-          >
+        <div className="fieldset-floating-legend is-editing">
+          <div className="fieldset-floating-edit-input-wrap">
             <input
               ref={inputRef}
-              className="input has-suffix"
+              className="input"
               type="text"
               value={draft}
               placeholder={props.placeholder ?? props.label}
               onInput={(e) => setDraft((e.currentTarget as HTMLInputElement).value)}
               onKeyDown={handleKeyDown}
             />
-            <span>{label}</span>
-            <div className="field-floating-suffix">
+            <div className="fieldset-floating-legend-actions">
               <button
                 type="button"
                 className="input-icon-btn"
@@ -95,19 +91,24 @@ export function FloatingFieldset(props: FloatingFieldsetProps) {
                 <X size={16} />
               </button>
             </div>
-          </label>
-        </legend>
+          </div>
+        </div>
       ) : (
         <legend className="fieldset-floating-legend">
-          <span className="fieldset-floating-title">{label}</span>
-          <button
-            type="button"
-            className="fieldset-floating-legend-btn"
-            onClick={startEditing}
-            title="Edit title"
-          >
-            <Pencil size={12} />
-          </button>
+          <div className="fieldset-floating-legend-left">
+            <span className="fieldset-floating-title">{label}</span>
+            <button
+              type="button"
+              className="fieldset-floating-legend-btn"
+              onClick={startEditing}
+              title="Edit title"
+            >
+              <Pencil size={12} />
+            </button>
+          </div>
+          <div className="fieldset-floating-title-accent">
+            {props.titleAccessory}
+          </div>
         </legend>
       )}
       {props.children}

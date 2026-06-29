@@ -552,8 +552,15 @@ h4 {
   border-radius: var(--radius-lg);
   background: var(--panel);
   padding: 16px;
-  margin: 0;
+  margin: 0 0 24px 0;
   box-shadow: var(--shadow-sm);
+  min-height: 56px;
+}
+
+/* First card in the editor needs top breathing room for the floating legend */
+.detail-switch-stage > .fieldset-floating:first-child,
+.detail-col > .fieldset-floating:first-child {
+  margin-top: 0;
 }
 
 .fieldset-floating > :first-child {
@@ -564,22 +571,41 @@ h4 {
   position: absolute;
   top: 0;
   left: 12px;
+  right: 12px;
   transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  padding: 0;
+  z-index: 1;
+  margin: 0;
+}
+
+.fieldset-floating-legend-left {
   display: flex;
   align-items: center;
   gap: 4px;
   background: var(--panel);
   padding: 0 4px;
-  z-index: 1;
-  float: left; /* legend width shrinks to content */
-  margin: 0;
 }
 
 .fieldset-floating-title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--brand);
   line-height: 1;
+  flex-shrink: 0;
+}
+
+.fieldset-floating-title-accent {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  flex-shrink: 0;
+  background: var(--panel);
+  padding: 0 4px;
 }
 
 .fieldset-floating-legend-btn {
@@ -602,43 +628,54 @@ h4 {
   background: color-mix(in srgb, var(--primary) 8%, transparent);
 }
 
+/* Editing mode — uses <div> instead of <legend> to avoid browser UA style restrictions */
 .fieldset-floating-legend.is-editing {
-  /* Position the editing container (input + buttons) on the border line */
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  float: none;
   padding: 0;
+  margin: 0 0 16px 0;
   background: transparent;
-  gap: 0;
+  width: 100%;
 }
 
-.fieldset-floating-legend.is-editing .field-floating {
-  margin: 0;
+.fieldset-floating-edit-input-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
 }
 
-.fieldset-floating-legend.is-editing .field-floating > input {
-  height: 36px;
-  padding-top: 8px;
-  font-size: 14px;
+.fieldset-floating-edit-input-wrap > .input {
+  width: 100%;
+  padding-right: 64px;
+  box-sizing: border-box;
 }
 
-.fieldset-floating-legend.is-editing .field-floating > span {
-  font-size: 13px;
+.fieldset-floating-edit-input-wrap > .fieldset-floating-legend-actions {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 2px;
 }
 
-.fieldset-floating-legend.is-editing .field-floating-suffix .input-icon-btn {
-  color: var(--muted-strong);
-}
-
-.fieldset-floating-legend.is-editing .field-floating-suffix .input-icon-btn:hover {
-  color: var(--primary);
+.fieldset-floating-edit-input-wrap > .fieldset-floating-legend-actions > .input-icon-btn {
+  position: static;
+  transform: none;
+  width: 28px;
+  height: 28px;
 }
 /* ── End Floating Fieldset ── */
 
-/* Add Group button — below TOTP, full width like segmented control */
+/* Add Group button — below TOTP, full width aligned with segmented control */
 .add-group-btn {
   width: 100%;
   margin-top: 4px;
-}
-.add-group-btn + .section-head {
-  margin-top: 12px;
 }
 
 .field > span {

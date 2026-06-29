@@ -607,6 +607,7 @@ const en: Record<string, string> = {
   "txt_no_devices_found": "No devices found.",
   "txt_no_custom_fields": "No custom fields yet. Click Add Field to add one.",
   "txt_no_folder": "No Folder",
+  "txt_no_attachments_yet": "No attachments yet",
   "txt_no_invites_found": "No invites found.",
   "txt_no_items": "No items",
   "txt_no_users_found": "No users found.",

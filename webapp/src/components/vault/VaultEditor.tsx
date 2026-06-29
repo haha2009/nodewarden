@@ -353,14 +353,16 @@ export default function VaultEditor(props: VaultEditorProps) {
 
   return (
     <>
-      <div className="card">
-        <div className="section-head">
-          <h3 className="detail-title">{props.isCreating ? t('txt_new_type_header', { type: cipherTypeLabel(props.draft.type) }) : t('txt_edit_type_header', { type: cipherTypeLabel(props.draft.type) })}</h3>
+      <FloatingFieldset
+        label={props.isCreating ? t('txt_new_type_header', { type: cipherTypeLabel(props.draft.type) }) : t('txt_edit_type_header', { type: cipherTypeLabel(props.draft.type) })}
+        onSave={() => { /* title is UI-only */ }}
+        titleAccessory={
           <button type="button" className={`btn btn-secondary small ${props.draft.favorite ? 'star-on' : ''}`} onClick={() => props.onUpdateDraft({ favorite: !props.draft.favorite })}>
             {props.draft.favorite ? <Star size={14} className="btn-icon" /> : <StarOff size={14} className="btn-icon" />}
             {t('txt_favorite')}
           </button>
-        </div>
+        }
+      >
         <div className="field-row">
           <label className="field field-compact">
             <span>{t('txt_type')}</span>
@@ -454,7 +456,7 @@ export default function VaultEditor(props: VaultEditorProps) {
             </div>
           </div>
         </div>
-      </div>
+      </FloatingFieldset>
 
       {/* Login Info card — password/third-party login fields + TOTP */}
       {props.draft.type === 1 && (
@@ -846,8 +848,10 @@ export default function VaultEditor(props: VaultEditorProps) {
       })()}
 
       {props.draft.type === 3 && (
-        <div className="card">
-          <h4>{t('txt_card_details')}</h4>
+        <FloatingFieldset
+          label={t('txt_card_details')}
+          onSave={() => { /* title is UI-only */ }}
+        >
           <div className="field-grid">
             <FloatingLabelInput label={t('txt_cardholder_name')} value={props.draft.cardholderName} onInput={(v) => props.onUpdateDraft({ cardholderName: v })} />
             <FloatingLabelInput
@@ -881,7 +885,7 @@ export default function VaultEditor(props: VaultEditorProps) {
             <FloatingLabelInput label={t('txt_expiry_month')} value={props.draft.cardExpMonth} onInput={(v) => props.onUpdateDraft({ cardExpMonth: v })} />
             <FloatingLabelInput label={t('txt_expiry_year')} value={props.draft.cardExpYear} onInput={(v) => props.onUpdateDraft({ cardExpYear: v })} />
           </div>
-        </div>
+        </FloatingFieldset>
       )}
 
       {props.draft.type === 4 && (
@@ -911,9 +915,10 @@ export default function VaultEditor(props: VaultEditorProps) {
       )}
 
       {props.draft.type === 5 && (
-        <div className="card">
-          <div className="section-head">
-            <h4>{t('txt_ssh_key')}</h4>
+        <FloatingFieldset
+          label={t('txt_ssh_key')}
+          onSave={() => { /* title is UI-only */ }}
+          titleAccessory={
             <button
               type="button"
               className="btn btn-secondary small"
@@ -922,7 +927,8 @@ export default function VaultEditor(props: VaultEditorProps) {
             >
               <RefreshCw size={14} className="btn-icon" /> {t('txt_regenerate')}
             </button>
-          </div>
+          }
+        >
           <label className="field">
             <span>{t('txt_private_key')}</span>
             <textarea
@@ -945,7 +951,7 @@ export default function VaultEditor(props: VaultEditorProps) {
             <span>{t('txt_fingerprint')}</span>
             <input className="input input-readonly" value={props.draft.sshFingerprint} readOnly />
           </label>
-        </div>
+        </FloatingFieldset>
       )}
 
       {/* Hidden file input for icon upload */}
@@ -962,20 +968,24 @@ export default function VaultEditor(props: VaultEditorProps) {
       />
 
       {props.draft.customIcon && (
-        <div className="card">
-          <div className="section-head">
-            <h4>{t('txt_custom_icon')}</h4>
+        <FloatingFieldset
+          label={t('txt_custom_icon')}
+          onSave={() => { /* title is UI-only */ }}
+          titleAccessory={
             <button type="button" className="btn btn-secondary small" onClick={() => props.onUpdateDraft({ customIcon: '' })}>
               {t('txt_remove')}
             </button>
-          </div>
+          }
+        >
           <div className="detail-sub">{t('txt_custom_icon_hint')}</div>
-        </div>
+        </FloatingFieldset>
       )}
 
-      <div className="card">
-        <div className="section-head attachment-head">
-          <h4>{t('txt_attachments')}</h4>
+      {/* Attachments card */}
+      <FloatingFieldset
+        label={t('txt_attachments')}
+        onSave={() => { /* title is UI-only */ }}
+        titleAccessory={
           <button
             type="button"
             className="btn btn-secondary small attachment-add-btn"
@@ -986,7 +996,11 @@ export default function VaultEditor(props: VaultEditorProps) {
           >
             <Plus size={14} className="btn-icon" />
           </button>
-        </div>
+        }
+      >
+        {!props.uploadingAttachmentName && !props.isCreating && (!props.selectedCipher || props.editExistingAttachments.length === 0) && !props.attachmentQueue.length && (
+          <div className="detail-sub">{t('txt_no_attachments_yet')}</div>
+        )}
         {!!props.uploadingAttachmentName && <div className="detail-sub">{uploadLabel}</div>}
         {!props.isCreating && props.selectedCipher && props.editExistingAttachments.length > 0 && (
           <div className="attachment-list">
@@ -1058,15 +1072,15 @@ export default function VaultEditor(props: VaultEditorProps) {
             ))}
           </div>
         )}
-      </div>
+      </FloatingFieldset>
 
-      <div className="card">
-        <div className="section-head">
-          <h4>{t('txt_custom_fields')}</h4>
+      <FloatingFieldset
+        label={t('txt_custom_fields')}
+        onSave={() => { /* title is UI-only */ }}
+      >
           <button type="button" className="btn btn-secondary small" onClick={props.onOpenFieldModal}>
             <Plus size={14} className="btn-icon" /> {t('txt_add_field')}
           </button>
-        </div>
         {props.draft.customFields.length === 0 && (
           <div className="detail-sub">{t('txt_no_custom_fields')}</div>
         )}
@@ -1182,10 +1196,12 @@ export default function VaultEditor(props: VaultEditorProps) {
             </div>
           ));
         })()}
-      </div>
+      </FloatingFieldset>
 
-      <div className="card">
-        <h4>{t('txt_additional_options')}</h4>
+      <FloatingFieldset
+        label={t('txt_additional_options')}
+        onSave={() => { /* title is UI-only */ }}
+      >
         <label className="field">
           <span>{t('txt_notes')}</span>
           <textarea className="input textarea" value={props.draft.notes} onInput={(e) => props.onUpdateDraft({ notes: (e.currentTarget as HTMLTextAreaElement).value })} />
@@ -1194,7 +1210,7 @@ export default function VaultEditor(props: VaultEditorProps) {
           <input type="checkbox" checked={props.draft.reprompt} onInput={(e) => props.onUpdateDraft({ reprompt: (e.currentTarget as HTMLInputElement).checked })} />
           {t('txt_master_password_reprompt')}
         </label>
-      </div>
+      </FloatingFieldset>
 
       <div className="detail-actions">
         <div className="actions">

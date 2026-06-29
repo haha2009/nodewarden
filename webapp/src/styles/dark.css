@@ -196,6 +196,53 @@
   box-shadow: 0 4px 40px rgba(0, 0, 0, 0.30);
 }
 
+/* ── dark mode: Floating Fieldset (vault editor cards) ── */
+:root[data-theme='dark'] .fieldset-floating {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.20), 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+:root[data-theme='dark'] .fieldset-floating-legend,
+:root[data-theme='dark'] .fieldset-floating-legend-left,
+:root[data-theme='dark'] .fieldset-floating-title-accent {
+  background: var(--panel);
+}
+
+:root[data-theme='dark'] .fieldset-floating-legend-btn {
+  color: var(--muted);
+}
+
+:root[data-theme='dark'] .fieldset-floating-legend-btn:hover {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+/* ── dark mode: vault editor card surfaces ── */
+:root[data-theme='dark'] .group-card {
+  background: var(--panel);
+  border-color: var(--line);
+}
+
+:root[data-theme='dark'] .group-head {
+  border-color: var(--line);
+}
+
+:root[data-theme='dark'] .group-body {
+  border-color: var(--line);
+}
+
+:root[data-theme='dark'] .group-login-card {
+  background: var(--panel-subtle, var(--panel));
+  border-color: var(--line);
+}
+
+:root[data-theme='dark'] .leading-input-inner {
+  border-color: var(--line);
+}
+
+:root[data-theme='dark'] .leading-input-inner:hover {
+  border-color: var(--line);
+}
+
 :root[data-theme='dark'] .list-item:hover {
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(139, 184, 255, 0.12);
 }
