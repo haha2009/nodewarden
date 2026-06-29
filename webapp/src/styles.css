@@ -637,11 +637,12 @@ h4 {
   background: var(--panel-soft);
 }
 
-/* Action items (e.g. favorite button) — right-aligned with card content, vertically aligned with first field row */
+/* Action items (e.g. favorite button) — right-aligned with card controls, vertically at title level */
 .fieldset-floating-action {
   position: absolute;
-  top: 32px;
+  top: 0;
   right: 16px;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   gap: 6px;
