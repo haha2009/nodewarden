@@ -461,7 +461,7 @@ h4 {
 }
 
 .field {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 /* ── Floating Label Input ── */
@@ -551,9 +551,9 @@ h4 {
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--panel);
-  padding: 16px;
-  margin: 0 0 24px 0;
   box-shadow: var(--shadow-sm);
+  padding: 16px;
+  margin: 0 0 20px 0;
   min-height: 56px;
 }
 
@@ -570,42 +570,48 @@ h4 {
 .fieldset-floating-legend {
   position: absolute;
   top: 0;
-  left: 12px;
-  right: 12px;
+  left: 16px;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
-  gap: 4px;
-  background: transparent;
-  padding: 0;
+  gap: 2px;
   z-index: 1;
   margin: 0;
 }
 
-.fieldset-floating-legend-left {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--panel);
-  padding: 0 4px;
-}
-
+/* Title text: half-bg mask — top half matches page bg, bottom half matches card bg */
 .fieldset-floating-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--brand);
-  line-height: 1;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
   flex-shrink: 0;
+  position: relative;
+  padding: 0 6px;
 }
 
-.fieldset-floating-title-accent {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: auto;
-  flex-shrink: 0;
+/* Top half: page background color (covers the border line above) */
+.fieldset-floating-title::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: var(--bg-accent, var(--panel-soft));
+  z-index: -1;
+}
+
+/* Bottom half: card background color (covers the border line below) */
+.fieldset-floating-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
   background: var(--panel);
-  padding: 0 4px;
+  z-index: -1;
 }
 
 .fieldset-floating-legend-btn {
@@ -614,61 +620,115 @@ h4 {
   justify-content: center;
   width: 22px;
   height: 22px;
-  border-radius: var(--radius-sm);
   border: none;
-  background: transparent;
+  background: var(--panel);
   color: var(--muted);
   cursor: pointer;
   flex-shrink: 0;
-  transition: color 0.15s ease-out, background-color 0.15s ease-out;
+  font-size: 14px;
+  line-height: 1;
+  transition: color var(--dur-quick) var(--ease-smooth), background var(--dur-quick) var(--ease-smooth);
+  padding: 0;
+  border-radius: var(--radius-sm);
 }
 
 .fieldset-floating-legend-btn:hover {
-  color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  color: var(--text);
+  background: var(--panel-soft);
 }
 
-/* Editing mode — uses <div> instead of <legend> to avoid browser UA style restrictions */
-.fieldset-floating-legend.is-editing {
-  position: relative;
-  top: auto;
-  left: auto;
-  transform: none;
-  float: none;
-  padding: 0;
-  margin: 0 0 16px 0;
-  background: transparent;
-  width: 100%;
-}
-
-.fieldset-floating-edit-input-wrap {
-  position: relative;
-  display: block;
-  width: 100%;
-}
-
-.fieldset-floating-edit-input-wrap > .input {
-  width: 100%;
-  padding-right: 64px;
-  box-sizing: border-box;
-}
-
-.fieldset-floating-edit-input-wrap > .fieldset-floating-legend-actions {
+/* Action items (e.g. favorite button) — right-aligned with card content, vertically aligned with first field row */
+.fieldset-floating-action {
   position: absolute;
-  right: 4px;
+  top: 32px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 1;
+  background: transparent;
+  padding: 0;
+}
+
+/* ── Editing mode: bordered input with text suffix buttons inside ── */
+.fieldset-floating-edit-row {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.fieldset-floating-edit-input {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 4px 60px 4px 10px;
+  margin: 0;
+  outline: none;
+  width: auto;
+  min-width: 80px;
+  box-shadow: none;
+  transform: none;
+  transition: border-color var(--dur-quick) var(--ease-smooth);
+}
+
+.fieldset-floating-edit-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent);
+  transform: none;
+}
+
+.fieldset-floating-edit-input::placeholder {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.fieldset-floating-edit-suffix {
+  position: absolute;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
-  flex-direction: row;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
+  pointer-events: auto;
 }
 
-.fieldset-floating-edit-input-wrap > .fieldset-floating-legend-actions > .input-icon-btn {
-  position: static;
-  transform: none;
-  width: 28px;
-  height: 28px;
+.fieldset-floating-edit-suffix .fieldset-floating-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: 24px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0 6px;
+  transition: color var(--dur-quick) var(--ease-smooth), background var(--dur-quick) var(--ease-smooth);
+}
+
+.fieldset-floating-edit-suffix .fieldset-floating-edit-btn.save {
+  color: var(--primary);
+}
+
+.fieldset-floating-edit-suffix .fieldset-floating-edit-btn.save:hover {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.fieldset-floating-edit-suffix .fieldset-floating-edit-btn.cancel {
+  color: var(--muted);
+}
+
+.fieldset-floating-edit-suffix .fieldset-floating-edit-btn.cancel:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--muted) 10%, transparent);
 }
 /* ── End Floating Fieldset ── */
 
@@ -679,7 +739,7 @@ h4 {
 }
 
 .field > span {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   color: var(--muted-strong);
   font-size: 13px;
   font-weight: 700;

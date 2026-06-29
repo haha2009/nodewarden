@@ -1,72 +1,15 @@
 # NodeWarden 前端设计规范
 
-> 本文档是 NodeWarden 前端的唯一设计参考标准，涵盖所有页面组件。
-> 所有前端开发必须严格遵循，发现不一致时优先更新代码，然后更新本文档。
+> ⚠️ **本文档已合并至统一设计标准**：所有设计规则以 [`docs/frontend-design-standard.md`](./frontend-design-standard.md) 为准。
+> 本文档仅保留 vault editor 特有的页面级布局规范，全局设计令牌、排印、按钮、卡片等规则请查阅统一标准。
 >
-> **设计参考来源**：Bitwarden Web Vault 官方客户端（Angular + Tailwind）。
-> NodeWarden 是 Bitwarden 兼容服务端，前端设计遵循与 Bitwarden 一致的布局/间距/对齐模式。
+> **强制执行**：设计师、前端工程师和 AI Agent 必须严格遵守 `frontend-design-standard.md` 的规则。
 
 ---
 
-## 1. 设计系统基础
+## 设计系统基础
 
-### 1.1 CSS 变量体系（Design Tokens）
-
-所有颜色、间距、圆角、阴影、动画缓动函数均使用 CSS 变量定义，见 `tokens.css`。
-
-```css
-/* 颜色 */
---panel: #ffffff;                     /* 卡片/面板背景 */
---panel-soft: #f8fafc;               /* 稍暗的面板背景（侧栏/顶栏） */
---panel-muted: #edf2f7;              /* 更暗的面板背景 */
---line: rgba(100, 116, 139, 0.24);    /* 边框线 */
---line-soft: rgba(100, 116, 139, 0.14); /* 更淡边框 */
---text: #0f172a;                      /* 主文字 */
---muted: #64748b;                     /* 次要文字 */
---muted-strong: #334155;             /* 较强次要文字（标签） */
---primary / --brand: #2563eb;        /* 主色调 / 品牌色 */
---primary-hover: #1d4ed8;
---danger: #dc2626;                    /* 危险/删除操作 */
---success: #059669;                   /* 成功状态 */
---warning: #d97706;                   /* 警告 */
-
-/* 圆角 */
---radius-sm: 6px;    --radius-md: 8px;   --radius-lg: 10px;
---radius-xl: 14px;   --radius-2xl: 18px;
-
-/* 阴影 */
---shadow-sm;  --shadow-md;  --shadow-lg;  --shadow-xl;  --shadow-glow;
-
-/* 动画缓动 */
---ease-out-strong: cubic-bezier(0.22, 1, 0.36, 1);
---ease-out-soft: cubic-bezier(0.24, 0.8, 0.32, 1);
---ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
---ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-
-/* 动画时长 */
---dur-instant: 80ms;   --dur-quick: 120ms;   --dur-fast: 180ms;
---dur-medium: 240ms;   --dur-panel: 280ms;   --dur-slow: 350ms;
-
-/* 间距 */
---space-1: 4px;   --space-2: 8px;   --space-3: 12px;
---space-4: 16px;  --space-5: 20px;  --space-6: 24px;
---space-8: 32px;  --space-10: 40px;
-
-/* 字体 */
---font-sans: Inter, ui-sans-serif, ...;
---font-xs: 11px;  --font-sm: 14px;  --font-base: 15px;
---font-md: 16px;  --font-lg: 17px;  --font-xl: 19px;  --font-2xl: 21px;
-```
-
-### 1.2 暗色模式
-
-所有暗色模式样式定义在 `tokens.css` 的 `:root[data-theme='dark']` 中。
-暗色模式下面板背景变深、边框更透明、主色调变亮、阴影更深。
-
-### 1.3 响应式断点
-
-- `max-width: 1180px` — 平板/小屏：三栏变单栏，移动端 tab bar 出现
-- `max-width: 640px` — 手机：更紧凑的间距，全屏对话框
+所有设计令牌（颜色、间距、圆角、阴影、动画、字体）定义在 `webapp/src/styles/tokens.css` 中，完整规范见 [`docs/frontend-design-standard.md`](./frontend-design-standard.md) 第 1 节。
 
 ---
 

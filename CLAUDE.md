@@ -45,7 +45,7 @@ npm run i18n:validate    # 验证 i18n 翻译完整性
 - **加密字段**: 服务器存加密密文，前端 `dec*` 字段存解密后明文（如 `decName`, `decUsername`）
 - **API**: Bitwarden 兼容 API 路径（`/api/ciphers`, `/api/sync` 等）
 - **样式**: Tailwind utility + 拆分 CSS 文件（`styles/vault.css`, `styles/auth.css` 等）
-- **设计规范**: 前端样式必须遵守 `docs/vault-editor-design-spec.md` 中的设计规范
+- **设计规范**: 前端样式必须遵守 `docs/frontend-design-standard.md` 中的设计标准（强制执行）
 
 ## Critical Areas (from CONTRIBUTING.md)
 1. **数据库变更** → 改 `storage-schema.ts` + 加 migration SQL + 更新 `storage.ts`

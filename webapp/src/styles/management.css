@@ -1393,7 +1393,7 @@
 
 .check-line {
   @apply mb-3 flex items-center gap-2;
-  color: #334155;
+  color: var(--muted-strong);
 }
 
 .table {

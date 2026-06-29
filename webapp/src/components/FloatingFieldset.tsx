@@ -1,6 +1,6 @@
 import { type ComponentChildren, type JSX } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Check, Pencil, X } from 'lucide-preact';
+import { t } from '@/lib/i18n';
 
 export interface FloatingFieldsetProps {
   /** Current title text */
@@ -21,18 +21,10 @@ export function FloatingFieldset(props: FloatingFieldsetProps) {
   const [draft, setDraft] = useState('');
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // Sync external label changes (e.g. i18n locale switch)
   useEffect(() => { setLabel(props.label); }, [props.label]);
 
-  function startEditing() {
-    setDraft(label);
-    setEditing(true);
-  }
-
-  function cancel() {
-    setEditing(false);
-  }
-
+  function startEditing() { setDraft(label); setEditing(true); }
+  function cancel() { setEditing(false); }
   function save() {
     const trimmed = draft.trim();
     if (trimmed.length === 0) return;
@@ -40,18 +32,10 @@ export function FloatingFieldset(props: FloatingFieldsetProps) {
     setEditing(false);
     props.onSave(trimmed);
   }
-
   function handleKeyDown(e: JSX.TargetedKeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      save();
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      cancel();
-    }
+    if (e.key === 'Enter') { e.preventDefault(); save(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
   }
-
-  // Auto-focus + select input when entering edit mode (mount only)
   useEffect(() => {
     if (editing && inputRef.current) {
       inputRef.current.focus();
@@ -61,55 +45,37 @@ export function FloatingFieldset(props: FloatingFieldsetProps) {
 
   return (
     <fieldset className="fieldset-floating">
-      {editing ? (
-        <div className="fieldset-floating-legend is-editing">
-          <div className="fieldset-floating-edit-input-wrap">
-            <input
-              ref={inputRef}
-              className="input"
-              type="text"
-              value={draft}
+      <legend className="fieldset-floating-legend">
+        {editing ? (
+          <span className="fieldset-floating-edit-row">
+            <input ref={inputRef} className="fieldset-floating-edit-input" type="text" value={draft}
               placeholder={props.placeholder ?? props.label}
               onInput={(e) => setDraft((e.currentTarget as HTMLInputElement).value)}
               onKeyDown={handleKeyDown}
-            />
-            <div className="fieldset-floating-legend-actions">
-              <button
-                type="button"
-                className="input-icon-btn"
-                onClick={save}
-                title="Save"
-              >
-                <Check size={16} />
+              onBlur={save} />
+            <span className="fieldset-floating-edit-suffix">
+              <button type="button" className="fieldset-floating-edit-btn save" onClick={save} title={t('txt_save')}>
+                &#x2713;
               </button>
-              <button
-                type="button"
-                className="input-icon-btn"
-                onClick={cancel}
-                title="Cancel"
-              >
-                <X size={16} />
+              <button type="button" className="fieldset-floating-edit-btn cancel" onClick={cancel} title={t('txt_cancel')}>
+                &#x2715;
               </button>
-            </div>
-          </div>
+            </span>
+          </span>
+        ) : (
+          <span className="fieldset-floating-title">{label}</span>
+        )}
+        {!editing && (
+          <button type="button" className="fieldset-floating-legend-btn"
+            onClick={startEditing} title={t('txt_edit')}>
+            &#x270E;
+          </button>
+        )}
+      </legend>
+      {!editing && props.titleAccessory && (
+        <div className="fieldset-floating-action">
+          {props.titleAccessory}
         </div>
-      ) : (
-        <legend className="fieldset-floating-legend">
-          <div className="fieldset-floating-legend-left">
-            <span className="fieldset-floating-title">{label}</span>
-            <button
-              type="button"
-              className="fieldset-floating-legend-btn"
-              onClick={startEditing}
-              title="Edit title"
-            >
-              <Pencil size={12} />
-            </button>
-          </div>
-          <div className="fieldset-floating-title-accent">
-            {props.titleAccessory}
-          </div>
-        </legend>
       )}
       {props.children}
     </fieldset>

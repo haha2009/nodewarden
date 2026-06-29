@@ -889,8 +889,7 @@ export default function VaultEditor(props: VaultEditorProps) {
       )}
 
       {props.draft.type === 4 && (
-        <div className="card">
-          <h4>{t('txt_identity_details')}</h4>
+        <FloatingFieldset label={t('txt_identity_details')}>
           <div className="field-grid">
             <FloatingLabelInput label={t('txt_title')} value={props.draft.identTitle} onInput={(v) => props.onUpdateDraft({ identTitle: v })} />
             <FloatingLabelInput label={t('txt_first_name')} value={props.draft.identFirstName} onInput={(v) => props.onUpdateDraft({ identFirstName: v })} />
@@ -911,7 +910,7 @@ export default function VaultEditor(props: VaultEditorProps) {
             <FloatingLabelInput label={t('txt_postal_code')} value={props.draft.identPostalCode} onInput={(v) => props.onUpdateDraft({ identPostalCode: v })} />
             <FloatingLabelInput label={t('txt_country')} value={props.draft.identCountry} onInput={(v) => props.onUpdateDraft({ identCountry: v })} />
           </div>
-        </div>
+        </FloatingFieldset>
       )}
 
       {props.draft.type === 5 && (
@@ -985,7 +984,8 @@ export default function VaultEditor(props: VaultEditorProps) {
       <FloatingFieldset
         label={t('txt_attachments')}
         onSave={() => { /* title is UI-only */ }}
-        titleAccessory={
+      >
+        <div className="attachment-toolbar">
           <button
             type="button"
             className="btn btn-secondary small attachment-add-btn"
@@ -994,10 +994,9 @@ export default function VaultEditor(props: VaultEditorProps) {
             title={t('txt_upload_attachments')}
             aria-label={t('txt_upload_attachments')}
           >
-            <Plus size={14} className="btn-icon" />
+            <Plus size={14} className="btn-icon" /> {t('txt_upload_attachments')}
           </button>
-        }
-      >
+        </div>
         {!props.uploadingAttachmentName && !props.isCreating && (!props.selectedCipher || props.editExistingAttachments.length === 0) && !props.attachmentQueue.length && (
           <div className="detail-sub">{t('txt_no_attachments_yet')}</div>
         )}

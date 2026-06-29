@@ -197,10 +197,6 @@
 }
 
 /* ── dark mode: Floating Fieldset (vault editor cards) ── */
-:root[data-theme='dark'] .fieldset-floating {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.20), 0 8px 24px rgba(0, 0, 0, 0.16);
-}
-
 :root[data-theme='dark'] .fieldset-floating-legend,
 :root[data-theme='dark'] .fieldset-floating-legend-left,
 :root[data-theme='dark'] .fieldset-floating-title-accent {
@@ -212,9 +208,26 @@
 }
 
 :root[data-theme='dark'] .fieldset-floating-legend-btn:hover {
-  color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--text);
 }
+
+:root[data-theme='dark'] .fieldset-floating-edit-input-wrap > .input {
+  border-bottom-color: var(--line);
+}
+
+:root[data-theme='dark'] .fieldset-floating-edit-input-wrap > .input:focus {
+  border-bottom-color: var(--text);
+}
+
+:root[data-theme='dark'] .fieldset-floating-edit-input-wrap > .fieldset-floating-legend-actions > .input-icon-btn {
+  color: var(--muted);
+}
+
+:root[data-theme='dark'] .fieldset-floating-edit-input-wrap > .fieldset-floating-legend-actions > .input-icon-btn:hover {
+  color: var(--text);
+  background: rgba(226, 232, 240, 0.06);
+}
+
 
 /* ── dark mode: vault editor card surfaces ── */
 :root[data-theme='dark'] .group-card {
