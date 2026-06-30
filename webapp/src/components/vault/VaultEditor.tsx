@@ -581,7 +581,8 @@ export default function VaultEditor(props: VaultEditorProps) {
           {props.draft.loginType === 'qr_scan' && (
             <div className="platform-select-row">
               <PlatformIcon platform={props.draft.thirdPartyPlatform || 'wechat'} />
-              <select className="input" value={props.draft.thirdPartyPlatform || 'wechat'} onInput={(e) => props.onUpdateDraft({ thirdPartyPlatform: (e.currentTarget as HTMLSelectElement).value })}>
+              <select className="input" value={props.draft.thirdPartyPlatform} onInput={(e) => props.onUpdateDraft({ thirdPartyPlatform: (e.currentTarget as HTMLSelectElement).value })}>
+                <option value="">{t('txt_select_platform')}</option>
                 <option value="wechat">WeChat</option>
                 <option value="qq">QQ</option>
                 <option value="weibo">Weibo</option>
@@ -618,7 +619,7 @@ export default function VaultEditor(props: VaultEditorProps) {
           {props.draft.loginType === 'third_party' && (
             <div className="platform-select-row">
               <PlatformIcon platform={props.draft.thirdPartyPlatform || 'google'} />
-              <select className="input" value={props.draft.thirdPartyPlatform || 'google'} onInput={(e) => props.onUpdateDraft({ thirdPartyPlatform: (e.currentTarget as HTMLSelectElement).value })}>
+              <select className="input" value={props.draft.thirdPartyPlatform} onInput={(e) => props.onUpdateDraft({ thirdPartyPlatform: (e.currentTarget as HTMLSelectElement).value })}>
                 <option value="">{t('txt_select_platform')}</option>
                 <option value="google">Google</option>
                 <option value="apple">Apple</option>
@@ -769,7 +770,7 @@ export default function VaultEditor(props: VaultEditorProps) {
                   {login.loginType === 'qr_scan' && (
                     <div className="platform-select-row">
                       <PlatformIcon platform={login.thirdPartyPlatform || 'wechat'} />
-                      <select className="input" value={login.thirdPartyPlatform || 'wechat'} onInput={(e) => {
+                      <select className="input" value={login.thirdPartyPlatform} onInput={(e) => {
                         const value = (e.currentTarget as HTMLSelectElement).value;
                         const updated = [...groups];
                         updated[groupIndex] = { ...updated[groupIndex], logins: [{ ...login, thirdPartyPlatform: value }] };
@@ -819,7 +820,7 @@ export default function VaultEditor(props: VaultEditorProps) {
                   {login.loginType === 'third_party' && (
                     <div className="platform-select-row">
                       <PlatformIcon platform={login.thirdPartyPlatform || 'google'} />
-                      <select className="input" value={login.thirdPartyPlatform || 'google'} onInput={(e) => {
+                      <select className="input" value={login.thirdPartyPlatform} onInput={(e) => {
                         const value = (e.currentTarget as HTMLSelectElement).value;
                         const updated = [...groups];
                         updated[groupIndex] = { ...updated[groupIndex], logins: [{ ...login, thirdPartyPlatform: value }] };
