@@ -22,11 +22,13 @@ export interface PutBlobOptions {
 }
 
 function hasR2Storage(env: Env): env is Env & { ATTACHMENTS: R2Bucket } {
-  return !!env.ATTACHMENTS;
+  const b = env.ATTACHMENTS;
+  return !!b && typeof (b as { list?: unknown }).list === 'function';
 }
 
 function hasKvStorage(env: Env): env is Env & { ATTACHMENTS_KV: KVNamespace } {
-  return !!env.ATTACHMENTS_KV;
+  const b = env.ATTACHMENTS_KV;
+  return !!b && typeof (b as { getWithMetadata?: unknown }).getWithMetadata === 'function';
 }
 
 export function getBlobStorageKind(env: Env): 'r2' | 'kv' | null {
