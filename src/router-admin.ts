@@ -13,6 +13,7 @@ import {
   handleAdminClearAuditLogs,
 } from './handlers/admin';
 import { handleAdminBackupRoute } from './router-admin-backup';
+import { handleUpsertCardTemplate, handleDeleteCardTemplate } from './handlers/card-config';
 
 export async function handleAdminRoute(
   request: Request,
@@ -63,6 +64,17 @@ export async function handleAdminRoute(
   const adminUserDeleteMatch = path.match(/^\/api\/admin\/users\/([a-f0-9-]+)$/i);
   if (adminUserDeleteMatch && method === 'DELETE') {
     return handleAdminDeleteUser(request, env, actorUser, adminUserDeleteMatch[1]);
+  }
+
+  if (path === '/api/settings/card-templates') {
+    if (method === 'POST') return handleUpsertCardTemplate(request, env, actorUser);
+    return null;
+  }
+
+  const cardTemplateMatch = path.match(/^\/api\/settings\/card-templates\/([^/]+)$/i);
+  if (cardTemplateMatch) {
+    if (method === 'DELETE') return handleDeleteCardTemplate(request, env, actorUser, decodeURIComponent(cardTemplateMatch[1]));
+    if (method === 'PUT') return handleUpsertCardTemplate(request, env, actorUser);
   }
 
   return null;

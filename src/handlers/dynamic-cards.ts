@@ -82,7 +82,7 @@ export async function handleValidateDynamicSchema(request: Request, _env: Env, _
   return jsonResponse(validation);
 }
 
-function validateSchema(schema: any): { valid: boolean; errors: { path: string; message: string }[] } {
+export function validateSchema(schema: any): { valid: boolean; errors: { path: string; message: string }[] } {
   const errors: { path: string; message: string }[] = [];
 
   if (!schema || typeof schema !== 'object') {

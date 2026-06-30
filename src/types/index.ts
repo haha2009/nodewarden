@@ -265,6 +265,14 @@ export interface DynamicCardSchema {
   variant?: 'default' | 'accent' | 'warning';
 }
 
+export interface CardTypeConfig {
+  key: string;
+  title: string;
+  enabled: boolean;
+  order: number;
+  schema: DynamicCardSchema;
+}
+
 // Folder model
 export interface Folder {
   id: string;

@@ -89,6 +89,7 @@ import {
   handlePutDynamicSchema,
   handleValidateDynamicSchema,
 } from './handlers/dynamic-cards';
+import { handleGetCardTemplates } from './handlers/card-config';
 
 export async function handleAuthenticatedRoute(
   request: Request,
@@ -383,6 +384,10 @@ export async function handleAuthenticatedRoute(
     if (method === 'GET') return handleGetDomains(env, userId);
     if (method === 'PUT' || method === 'POST') return handleUpdateDomains(request, env, userId);
     return null;
+  }
+
+  if (path === '/api/settings/card-templates' && method === 'GET') {
+    return handleGetCardTemplates(env);
   }
 
   const authenticatedDeviceResponse = await handleAuthenticatedDeviceRoute(request, env, userId, path, method);
