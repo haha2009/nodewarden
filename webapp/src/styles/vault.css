@@ -41,6 +41,20 @@
 .card .field-compact:last-of-type {
   margin-bottom: 0;
 }
+/* FloatingFieldset 内最后一个字段也去除底部间距 */
+.fieldset-floating > .field:last-child,
+.fieldset-floating > .field-compact:last-child {
+  margin-bottom: 0;
+}
+.fieldset-floating > .name-field-group:last-child {
+  margin-bottom: 0;
+}
+.fieldset-floating > .name-field-group:last-child .field-floating:last-child {
+  margin-bottom: 0;
+}
+.fieldset-floating > .platform-select-row:last-child {
+  margin-bottom: 0;
+}
 
 .sidebar {
   @apply overflow-auto border-0 bg-transparent p-0 shadow-none;
@@ -679,13 +693,13 @@
 
 /* Segmented control for login type toggle */
 .segmented-control {
-  @apply mb-3 inline-flex w-full overflow-hidden rounded-xl border;
+  @apply mb-4 inline-flex w-full overflow-hidden rounded-xl border;
   border-color: var(--line);
   background: var(--panel-soft);
 }
 
 .segmented-btn {
-  @apply flex flex-1 cursor-pointer items-center justify-center gap-1.5 border-0 px-3 py-2.5 text-sm font-semibold transition-all;
+  @apply flex flex-1 cursor-pointer items-center justify-center gap-1 border-0 px-2 py-2.5 text-sm font-semibold transition-all;
   background: transparent;
   color: var(--muted);
   letter-spacing: var(--tracking-tight);
@@ -1376,6 +1390,32 @@
 .group-add-field-btn,
 .group-add-attachment-btn {
   @apply mt-2;
+}
+
+.group-add-login-area {
+  @apply grid;
+}
+
+.group-add-login-options {
+  @apply mt-2 inline-flex overflow-hidden rounded-lg border;
+  border-color: var(--line);
+  background: var(--panel-soft);
+}
+
+.group-add-login-options .segmented-btn {
+  @apply flex cursor-pointer items-center justify-center gap-1 border-0 px-2.5 py-2 text-xs font-semibold transition-all;
+  background: transparent;
+  color: var(--muted);
+}
+
+.group-add-login-options .segmented-btn:hover {
+  background: color-mix(in srgb, var(--panel) 60%, transparent);
+  color: var(--text);
+}
+
+.group-add-login-options .segmented-btn + .segmented-btn {
+  @apply border-l;
+  border-color: var(--line);
 }
 
 .group-add-group-btn {

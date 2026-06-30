@@ -211,8 +211,58 @@ export interface Cipher {
   updatedAt: string;
   archivedAt: string | null;
   deletedAt: string | null;
+  dynamicSchema: string | null;
   /** Allow unknown fields from Bitwarden clients to be stored and passed through transparently. */
   [key: string]: any;
+}
+
+// ── Dynamic Card Schema (server-driven card rendering) ──
+
+export type DynamicFieldType =
+  | 'text'
+  | 'password'
+  | 'textarea'
+  | 'markdown'
+  | 'toggle'
+  | 'button'
+  | 'upload'
+  | 'select'
+  | 'number'
+  | 'email'
+  | 'phone'
+  | 'url'
+  | 'date'
+  | 'color'
+  | 'link';
+
+export interface DynamicFieldSchema {
+  key: string;
+  type: string;
+  label: string;
+  value?: string;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  hint?: string;
+  options?: Array<{ label: string; value: string }>;
+  variant?: 'primary' | 'secondary' | 'danger';
+  action?: string;
+  href?: string;
+  accept?: string;
+  min?: number;
+  max?: number;
+  meta?: Record<string, unknown>;
+}
+
+export interface DynamicCardSchema {
+  key: string;
+  title: string;
+  titleEditable?: boolean;
+  description?: string;
+  fields?: DynamicFieldSchema[];
+  children?: DynamicCardSchema[];
+  collapsed?: boolean;
+  variant?: 'default' | 'accent' | 'warning';
 }
 
 // Folder model

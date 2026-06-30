@@ -52,36 +52,6 @@ interface AuthViewsProps {
   onShowLockedPasswordHint: () => void;
 }
 
-function PasswordField(props: {
-  label: string;
-  value: string;
-  onInput: (v: string) => void;
-  autoFocus?: boolean;
-  autoComplete?: string;
-  placeholder?: string;
-}) {
-  const [show, setShow] = useState(false);
-  return (
-    <label className="field">
-      <span>{props.label}</span>
-      <div className="password-wrap">
-        <input
-          className="input"
-          type={show ? 'text' : 'password'}
-          value={props.value}
-          onInput={(e) => props.onInput((e.currentTarget as HTMLInputElement).value)}
-          autoFocus={props.autoFocus}
-          autoComplete={props.autoComplete}
-          placeholder={props.placeholder}
-        />
-        <button type="button" className="eye-btn" onClick={() => setShow((v) => !v)}>
-          {show ? <EyeOff size={16} /> : <Eye size={16} />}
-        </button>
-      </div>
-    </label>
-  );
-}
-
 export default function AuthViews(props: AuthViewsProps) {
   const loginBusy = props.pendingAction === 'login';
   const passkeyBusy = props.pendingAction === 'passkey';
@@ -89,6 +59,11 @@ export default function AuthViews(props: AuthViewsProps) {
   const unlockBusy = props.pendingAction === 'unlock';
   const passkeyPasswordPending = !!props.pendingPasskeyPasswordEmail;
   const showInviteCodeField = props.registrationInviteRequired !== false || !!props.registerValues.inviteCode.trim();
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showPasskeyPassword, setShowPasskeyPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showRegisterPassword2, setShowRegisterPassword2] = useState(false);
+  const [showUnlockPassword, setShowUnlockPassword] = useState(false);
 
   if (props.mode === 'locked') {
     return (
@@ -102,14 +77,19 @@ export default function AuthViews(props: AuthViewsProps) {
           >
             <p className="muted standalone-muted">{props.emailForLock}</p>
             <input type="text" value={props.emailForLock} autoComplete="username" readOnly hidden tabIndex={-1} aria-hidden="true" />
-            <PasswordField
+            <FloatingLabelInput
               label={t('txt_master_password')}
               value={props.unlockPassword}
-              autoFocus
+              type={showUnlockPassword ? 'text' : 'password'}
               autoComplete="current-password"
               placeholder={props.unlockPlaceholder}
+              autoFocus
               onInput={props.onChangeUnlock}
-            />
+            >
+              <button type="button" className="input-icon-btn" onClick={() => setShowUnlockPassword(!showUnlockPassword)}>
+                {showUnlockPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </FloatingLabelInput>
             <div className="auth-support-row">
               <span />
               <button
@@ -171,18 +151,28 @@ export default function AuthViews(props: AuthViewsProps) {
               autoComplete="email"
               onInput={(v) => props.onChangeRegister({ ...props.registerValues, email: v })}
             />
-            <PasswordField
+            <FloatingLabelInput
               label={t('txt_master_password')}
               value={props.registerValues.password}
+              type={showRegisterPassword ? 'text' : 'password'}
               autoComplete="new-password"
               onInput={(v) => props.onChangeRegister({ ...props.registerValues, password: v })}
-            />
-            <PasswordField
+            >
+              <button type="button" className="input-icon-btn" onClick={() => setShowRegisterPassword(!showRegisterPassword)}>
+                {showRegisterPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </FloatingLabelInput>
+            <FloatingLabelInput
               label={t('txt_confirm_master_password')}
               value={props.registerValues.password2}
+              type={showRegisterPassword2 ? 'text' : 'password'}
               autoComplete="new-password"
               onInput={(v) => props.onChangeRegister({ ...props.registerValues, password2: v })}
-            />
+            >
+              <button type="button" className="input-icon-btn" onClick={() => setShowRegisterPassword2(!showRegisterPassword2)}>
+                {showRegisterPassword2 ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </FloatingLabelInput>
             <FloatingLabelInput
               label={t('txt_password_hint_optional')}
               value={props.registerValues.passwordHint}
@@ -229,14 +219,19 @@ export default function AuthViews(props: AuthViewsProps) {
             <>
               <p className="muted standalone-muted">{props.pendingPasskeyPasswordEmail}</p>
               <input type="text" value={props.pendingPasskeyPasswordEmail || ''} autoComplete="username" readOnly hidden tabIndex={-1} aria-hidden="true" />
-              <PasswordField
+              <FloatingLabelInput
                 label={t('txt_master_password')}
                 value={props.passkeyPassword}
-                autoFocus
+                type={showPasskeyPassword ? 'text' : 'password'}
                 autoComplete="current-password"
                 placeholder={props.authPlaceholder}
+                autoFocus
                 onInput={props.onChangePasskeyPassword}
-              />
+              >
+                <button type="button" className="input-icon-btn" onClick={() => setShowPasskeyPassword(!showPasskeyPassword)}>
+                  {showPasskeyPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </FloatingLabelInput>
               <button type="submit" className="btn btn-primary full" disabled={loginBusy}>
                 <Unlock size={16} className="btn-icon" />
                 {loginBusy ? t('txt_unlocking') : t('txt_unlock')}
@@ -258,13 +253,18 @@ export default function AuthViews(props: AuthViewsProps) {
             autoFocus
             onInput={(v) => props.onChangeLogin({ ...props.loginValues, email: v })}
           />
-          <PasswordField
+          <FloatingLabelInput
             label={t('txt_master_password')}
             value={props.loginValues.password}
+            type={showLoginPassword ? 'text' : 'password'}
             autoComplete="current-password"
             placeholder={props.authPlaceholder}
             onInput={(v) => props.onChangeLogin({ ...props.loginValues, password: v })}
-          />
+          >
+            <button type="button" className="input-icon-btn" onClick={() => setShowLoginPassword(!showLoginPassword)}>
+              {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </FloatingLabelInput>
           <div className="auth-support-row">
             <span />
             <button

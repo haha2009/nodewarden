@@ -2,6 +2,7 @@ import { createPortal } from 'preact/compat';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Archive, Clipboard, Download, Eye, EyeOff, ExternalLink, Folder, Paperclip, Pencil, RotateCcw, Trash2, X } from 'lucide-preact';
 import { useDialogLifecycle } from '@/components/ConfirmDialog';
+import { DynamicCard } from '@/components/DynamicCard';
 import type { Cipher } from '@/lib/types';
 import { t } from '@/lib/i18n';
 import {
@@ -262,7 +263,35 @@ export default function VaultDetailView(props: VaultDetailViewProps) {
                   </div>
                   {group.logins.map((login, loginIndex) => (
                     <div key={`detail-group-login-${groupIndex}-${loginIndex}`} className="group-detail-login">
-                      {login.loginType === 'password' ? (
+                      {login.loginType === 'sms_code' ? (
+                        <>
+                          <div className="kv-row">
+                            <span className="kv-label">{t('txt_phone_number')}</span>
+                            <div className="kv-main"><strong className="value-ellipsis">{login.phoneNumber || '—'}</strong></div>
+                            <div className="kv-actions">
+                              <button type="button" className="btn btn-secondary small" onClick={() => copyToClipboard(login.phoneNumber)}>
+                                <Clipboard size={14} className="btn-icon" /> {t('txt_copy')}
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      ) : login.loginType === 'qr_scan' ? (
+                        <>
+                          <div className="kv-row">
+                            <span className="kv-label">{t('txt_third_party_platform')}</span>
+                            <div className="kv-main"><strong>{login.thirdPartyPlatform || '—'}</strong></div>
+                          </div>
+                          <div className="kv-row">
+                            <span className="kv-label">{t('txt_third_party_account')}</span>
+                            <div className="kv-main"><strong className="value-ellipsis">{login.thirdPartyAccount}</strong></div>
+                            <div className="kv-actions">
+                              <button type="button" className="btn btn-secondary small" onClick={() => copyToClipboard(login.thirdPartyAccount)}>
+                                <Clipboard size={14} className="btn-icon" /> {t('txt_copy')}
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      ) : login.loginType === 'password' ? (
                         <>
                           {!!login.username && (
                             <div className="kv-row">
@@ -455,6 +484,14 @@ export default function VaultDetailView(props: VaultDetailViewProps) {
               <div className="notes">{props.selectedCipher.decNotes || ''}</div>
             </div>
           )}
+
+          {props.selectedCipher.dynamicSchema ? (
+            <DynamicCard
+              schema={props.selectedCipher.dynamicSchema}
+              depth={0}
+              readOnly={true}
+            />
+          ) : null}
 
           {(props.selectedCipher.fields || []).some((x) => parseFieldType(x.type) !== 3) && (
             <div className="card">

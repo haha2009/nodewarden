@@ -30,7 +30,7 @@ import {
 import { calcTotpNow } from '@/lib/crypto';
 import { computeSshFingerprint, generateDefaultSshKeyMaterial } from '@/lib/ssh';
 import { ChevronLeft } from 'lucide-preact';
-import type { Cipher, CustomFieldType, Folder, VaultDraft, VaultDraftField } from '@/lib/types';
+import type { Cipher, CustomFieldType, DynamicCardSchema, Folder, VaultDraft, VaultDraftField } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
 interface VaultPageProps {
@@ -40,6 +40,7 @@ interface VaultPageProps {
   error: string;
   emailForReprompt: string;
   onRefresh: () => Promise<void>;
+  onRefreshVault: () => Promise<void>;
   onCreate: (draft: VaultDraft, attachments?: File[]) => Promise<void>;
   onUpdate: (cipher: Cipher, draft: VaultDraft, options?: { addFiles?: File[]; removeAttachmentIds?: string[] }) => Promise<void>;
   onDelete: (cipher: Cipher) => Promise<void>;
@@ -64,6 +65,7 @@ interface VaultPageProps {
   uploadingAttachmentName: string;
   attachmentUploadPercent: number | null;
   mobileSidebarToggleKey: number;
+  onSaveDynamicSchema: (cipherId: string, schema: DynamicCardSchema) => Promise<void>;
 }
 
 
@@ -87,6 +89,7 @@ export default function VaultPage(props: VaultPageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [draft, setDraft] = useState<VaultDraft | null>(null);
+  const [dynamicSchemaMap, setDynamicSchemaMap] = useState<Record<string, DynamicCardSchema>>({});
   const [fieldModalOpen, setFieldModalOpen] = useState(false);
   const [fieldType, setFieldType] = useState<CustomFieldType>(0);
   const [fieldLabel, setFieldLabel] = useState('');
@@ -433,6 +436,16 @@ export default function VaultPage(props: VaultPageProps) {
   }, [filteredCiphers, filteredCipherIds, selectedCipherId, isCreating]);
 
   const selectedCipher = useMemo(() => cipherById.get(selectedCipherId) || null, [cipherById, selectedCipherId]);
+
+  useEffect(() => {
+    if (!selectedCipher) return;
+    setDynamicSchemaMap((prev) => {
+      if (!selectedCipher.dynamicSchema) return prev;
+      const existing = prev[selectedCipher.id];
+      if (existing && existing.key === selectedCipher.dynamicSchema.key) return prev;
+      return { ...prev, [selectedCipher.id]: selectedCipher.dynamicSchema as DynamicCardSchema };
+    });
+  }, [selectedCipher?.id, selectedCipher?.dynamicSchema]);
   const virtualRange = useMemo(() => {
     if (!filteredCiphers.length) {
       return { start: 0, end: 0, padTop: 0, padBottom: 0 };
@@ -1172,7 +1185,8 @@ const folderName = useCallback((id: string | null | undefined): string => {
                 onUpdateGroups={(groups) => updateDraft({ groups } as Partial<VaultDraft>)}
                 onAddGroup={() => {
                   const groups = draft.groups || [];
-                  updateDraft({ groups: [...groups, { id: crypto.randomUUID(), name: '', description: '', logins: [{ id: crypto.randomUUID(), loginType: 'password', username: '', password: '', totp: '', fido2Credentials: [], thirdPartyPlatform: '', thirdPartyAccount: '' }], customFields: [], attachments: [], removedAttachmentIds: {} }] } as Partial<VaultDraft>);
+                  const login = draft;
+                  updateDraft({ groups: [...groups, { id: crypto.randomUUID(), name: '', description: '', logins: [{ id: crypto.randomUUID(), loginType: login.loginType, username: login.loginUsername, password: login.loginPassword, totp: login.loginTotp, fido2Credentials: login.loginFido2Credentials, thirdPartyPlatform: login.thirdPartyPlatform, thirdPartyAccount: login.thirdPartyAccount, phoneNumber: login.phoneNumber }], customFields: [], attachments: [], removedAttachmentIds: {} }] } as Partial<VaultDraft>);
                 }}
                 onRemoveGroup={(groupIndex) => {
                   const groups = draft.groups || [];
@@ -1183,7 +1197,7 @@ const folderName = useCallback((id: string | null | undefined): string => {
                   const newGroups = [...groups];
                   newGroups[groupIndex] = {
                     ...newGroups[groupIndex],
-                    logins: [...newGroups[groupIndex].logins, { id: crypto.randomUUID(), loginType, username: '', password: '', totp: '', fido2Credentials: [], thirdPartyPlatform: '', thirdPartyAccount: '' }],
+                    logins: [...newGroups[groupIndex].logins, { id: crypto.randomUUID(), loginType, username: '', password: '', totp: '', fido2Credentials: [], thirdPartyPlatform: '', thirdPartyAccount: '', phoneNumber: '' }],
                   };
                   updateDraft({ groups: newGroups } as Partial<VaultDraft>);
                 }}
@@ -1236,6 +1250,15 @@ const folderName = useCallback((id: string | null | undefined): string => {
                 onSave={() => void saveDraft()}
                 onCancel={cancelEdit}
                 onDeleteSelected={() => selectedCipher && setPendingDelete(selectedCipher)}
+                onSaveDynamicSchema={async (cipherId, schema) => {
+                  setDynamicSchemaMap((prev) => ({ ...prev, [cipherId]: schema }));
+                  if (typeof props.onSaveDynamicSchema === 'function') {
+                    await props.onSaveDynamicSchema(cipherId, schema);
+                  }
+                  if (typeof props.onRefreshVault === 'function') {
+                    void props.onRefreshVault();
+                  }
+                }}
               />
             </div>
           )}

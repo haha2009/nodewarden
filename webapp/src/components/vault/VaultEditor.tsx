@@ -1,9 +1,10 @@
 import type { RefObject } from 'preact';
 import { createPortal } from 'preact/compat';
-import { ArrowDown, ArrowUp, CheckCheck, ChevronDown, ChevronRight, Copy, Download, Eye, EyeOff, Paperclip, Plus, QrCode, RefreshCw, Sparkles, Star, StarOff, Trash2, Upload, X } from 'lucide-preact';
+import { ArrowDown, ArrowUp, CheckCheck, ChevronDown, ChevronRight, Copy, Download, Eye, EyeOff, Paperclip, Plus, QrCode, RefreshCw, Save, Settings as SettingsIcon, Sparkles, Star, StarOff, Trash2, Upload, X, Loader2 } from 'lucide-preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { useDialogLifecycle } from '@/components/ConfirmDialog';
-import type { Cipher, Folder, VaultDraft, VaultDraftField, VaultDraftGroup, VaultDraftGroupLogin } from '@/lib/types';
+import { CardDesigner, type ToastMessage } from '@/components/CardDesigner';
+import type { Cipher, DynamicCardSchema, Folder, VaultDraft, VaultDraftField, VaultDraftGroup, VaultDraftGroupLogin } from '@/lib/types';
 import { t } from '@/lib/i18n';
 import { cardBrand } from '@/lib/import-format-shared';
 import {
@@ -63,7 +64,7 @@ interface VaultEditorProps {
   onUpdateGroups: (groups: VaultDraftGroup[]) => void;
   onAddGroup: () => void;
   onRemoveGroup: (groupIndex: number) => void;
-  onAddGroupLogin: (groupIndex: number, loginType: 'password' | 'third_party') => void;
+  onAddGroupLogin: (groupIndex: number, loginType: 'sms_code' | 'qr_scan' | 'password' | 'third_party') => void;
   onRemoveGroupLogin: (groupIndex: number, loginIndex: number) => void;
   onUpdateGroupLogin: (groupIndex: number, loginIndex: number, patch: Partial<VaultDraftGroupLogin>) => void;
   onPatchGroupCustomField: (groupIndex: number, fieldIndex: number, patch: Partial<VaultDraftField>) => void;
@@ -72,6 +73,7 @@ interface VaultEditorProps {
   onSave: () => void;
   onCancel: () => void;
   onDeleteSelected: () => void;
+  onSaveDynamicSchema?: (cipherId: string, schema: DynamicCardSchema) => Promise<void>;
 }
 
 export default function VaultEditor(props: VaultEditorProps) {
@@ -87,6 +89,7 @@ export default function VaultEditor(props: VaultEditorProps) {
   const [totpQrOpen, setTotpQrOpen] = useState(false);
   const [totpQrStatus, setTotpQrStatus] = useState('');
   const [totpQrBusy, setTotpQrBusy] = useState(false);
+  const [addingLoginGroup, setAddingLoginGroup] = useState(-1);
   useDialogLifecycle(totpQrOpen, () => setTotpQrOpen(false));
 
   const stopTotpQrScanner = () => {
@@ -144,8 +147,7 @@ export default function VaultEditor(props: VaultEditorProps) {
       bitmap?.close();
       setTotpQrBusy(false);
     }
-  };
-
+  }
   useEffect(() => {
     if (!totpQrOpen) {
       stopTotpQrScanner();
@@ -260,6 +262,15 @@ export default function VaultEditor(props: VaultEditorProps) {
 
   // Password generator dialog state
   const [pgOpen, setPgOpen] = useState(false);
+  const [designerOpen, setDesignerOpen] = useState(false);
+  const [designerToasts, setDesignerToasts] = useState<ToastMessage[]>([]);
+  const [designerSaving, setDesignerSaving] = useState(false);
+  const [dynamicSchema, setDynamicSchema] = useState<DynamicCardSchema>({
+    key: 'root',
+    title: '自定义卡片',
+    fields: [],
+    children: [],
+  });
   const [pgPassword, setPgPassword] = useState('');
   const [pgLength, setPgLength] = useState(20);
   const [pgUppercase, setPgUppercase] = useState(true);
@@ -267,6 +278,64 @@ export default function VaultEditor(props: VaultEditorProps) {
   const [pgNumbers, setPgNumbers] = useState(true);
   const [pgSymbols, setPgSymbols] = useState(true);
   const [pgExcludeSimilar, setPgExcludeSimilar] = useState(false);
+
+  // Auto-dismiss designer toasts
+  useEffect(() => {
+    if (designerToasts.length === 0) return;
+    const timer = setTimeout(() => {
+      setDesignerToasts(prev => prev.slice(1));
+    }, 4500);
+    return () => clearTimeout(timer);
+  }, [designerToasts]);
+
+  // Always use latest dynamicSchema via functional setState pattern
+  const schemaRef = useRef(dynamicSchema);
+  schemaRef.current = dynamicSchema;
+
+  // Capture cipherId synchronously when designer opens — works for both edit and create modes
+  const designerCipherIdRef = useRef<string | undefined>(undefined);
+
+  function handleOpenDesigner() {
+    const cipherId = props.selectedCipher?.id ?? props.draft?.id;
+    designerCipherIdRef.current = cipherId;
+    setDesignerOpen(true);
+  }
+
+  // Sync dynamicSchema with selectedCipher when designer opens or cipher changes
+  useEffect(() => {
+    if (!designerOpen) return;
+    const saved = props.selectedCipher?.dynamicSchema;
+    if (saved && typeof saved === 'object' && saved.key) {
+      setDynamicSchema(saved as DynamicCardSchema);
+    }
+  }, [designerOpen, props.selectedCipher?.id]);
+
+  const handleDesignerSave = async () => {
+    if (designerSaving) return;
+    setDesignerSaving(true);
+    const schemaToSave = schemaRef.current;
+    const cipherId = designerCipherIdRef.current;
+    console.log('[DBG-SAVE] start', { cipherId, schemaKey: schemaToSave?.key, fieldCount: schemaToSave?.fields?.length, fn: typeof props.onSaveDynamicSchema });
+    setDesignerOpen(false);
+    if (typeof props.onSaveDynamicSchema === 'function' && cipherId) {
+      try {
+        await props.onSaveDynamicSchema(cipherId, schemaToSave);
+        console.log('[DBG-SAVE] done OK');
+      } catch (err) {
+        console.error('[DBG-SAVE] ERR', err);
+        setDesignerOpen(true);
+      }
+    } else {
+      console.warn('[DBG-SAVE] skip', { fn: typeof props.onSaveDynamicSchema, cipherId });
+    }
+    setDesignerSaving(false);
+    console.log('[DBG-SAVE] saving reset');
+  };
+
+  const handleDesignerCancel = () => {
+    setDesignerOpen(false);
+  };
+
   useDialogLifecycle(pgOpen, () => setPgOpen(false));
 
   const generatePasswordWithOptions = (len: number, upper: boolean, lower: boolean, numbers: boolean, symbols: boolean, exclude: boolean): string => {
@@ -464,8 +533,24 @@ export default function VaultEditor(props: VaultEditorProps) {
           label={t('txt_login_info')}
           onSave={() => { /* title is UI-only, no draft update needed */ }}
         >
-          {/* Login type selector: password login or third-party login */}
+          {/* Login type selector: sms_code / qr_scan / password / third_party */}
           <div className="segmented-control">
+            <button
+              type="button"
+              className={`segmented-btn ${props.draft.loginType === 'sms_code' ? 'active' : ''}`}
+              onClick={() => props.onUpdateDraft({ loginType: 'sms_code' })}
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/><path d="M7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/></svg>
+              {t('txt_sms_code_login')}
+            </button>
+            <button
+              type="button"
+              className={`segmented-btn ${props.draft.loginType === 'qr_scan' ? 'active' : ''}`}
+              onClick={() => props.onUpdateDraft({ loginType: 'qr_scan' })}
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm8-12v8h8V3h-8zm6 6h-4V5h4v4zm-3 8h2v2h-2zm0-4h2v2h-2zm4 0h2v2h-2zm0 4h2v2h-2zm-4 4h2v2h-2zm4-4h2v2h-2z"/></svg>
+              {t('txt_qr_scan_login')}
+            </button>
             <button
               type="button"
               className={`segmented-btn ${props.draft.loginType === 'password' ? 'active' : ''}`}
@@ -483,6 +568,26 @@ export default function VaultEditor(props: VaultEditorProps) {
               {t('txt_third_party_login')}
             </button>
           </div>
+          {/* SMS code login fields */}
+          {props.draft.loginType === 'sms_code' && (
+            <FloatingLabelInput
+              label={t('txt_phone_number')}
+              value={props.draft.phoneNumber}
+              type="tel"
+              onInput={(v) => props.onUpdateDraft({ phoneNumber: v })}
+            />
+          )}
+          {/* QR scan login fields — same as third-party but only Chinese platforms */}
+          {props.draft.loginType === 'qr_scan' && (
+            <div className="platform-select-row">
+              <PlatformIcon platform={props.draft.thirdPartyPlatform || 'wechat'} />
+              <select className="input" value={props.draft.thirdPartyPlatform || 'wechat'} onInput={(e) => props.onUpdateDraft({ thirdPartyPlatform: (e.currentTarget as HTMLSelectElement).value })}>
+                <option value="wechat">WeChat</option>
+                <option value="qq">QQ</option>
+                <option value="weibo">Weibo</option>
+              </select>
+            </div>
+          )}
           {/* Password login fields */}
           {props.draft.loginType === 'password' && (
             <>
@@ -512,8 +617,8 @@ export default function VaultEditor(props: VaultEditorProps) {
           {/* Third-party login fields */}
           {props.draft.loginType === 'third_party' && (
             <div className="platform-select-row">
-              <PlatformIcon platform={props.draft.thirdPartyPlatform} />
-              <select className="input" value={props.draft.thirdPartyPlatform} onInput={(e) => props.onUpdateDraft({ thirdPartyPlatform: (e.currentTarget as HTMLSelectElement).value })}>
+              <PlatformIcon platform={props.draft.thirdPartyPlatform || 'google'} />
+              <select className="input" value={props.draft.thirdPartyPlatform || 'google'} onInput={(e) => props.onUpdateDraft({ thirdPartyPlatform: (e.currentTarget as HTMLSelectElement).value })}>
                 <option value="">{t('txt_select_platform')}</option>
                 <option value="google">Google</option>
                 <option value="apple">Apple</option>
@@ -539,8 +644,8 @@ export default function VaultEditor(props: VaultEditorProps) {
                 <QrCode size={18} className="btn-icon" />
               </button>
           </FloatingLabelInput>
-          {/* Add Group button — below TOTP, full width, aligned with segmented control */}
-          <button type="button" className="btn btn-secondary full add-group-btn" onClick={props.onAddGroup}>
+          {/* Add Group button — below TOTP, with extra spacing to visually separate */}
+          <button type="button" className="btn btn-secondary full add-group-btn mt-3" onClick={props.onAddGroup}>
             <Plus size={14} className="btn-icon" /> {t('txt_add_group')}
           </button>
           {/* Passkeys */}
@@ -578,272 +683,194 @@ export default function VaultEditor(props: VaultEditorProps) {
         </FloatingFieldset>
       )}
 
-      {/* Login Groups — multi-account management (hidden by default, shown when groups exist) */}
+      {/* Login Groups — each group is a FloatingFieldset card identical to login info */}
       {props.draft.type === 1 && (() => {
         const groups = props.draft.groups || [];
         if (groups.length === 0) return null;
         return (
-          <div className="card">
-            <div className="section-head">
-              <input
-                className="input group-title-input"
-                value={props.draft.groupsTitle}
-                onInput={(e) => props.onUpdateDraft({ groupsTitle: (e.currentTarget as HTMLInputElement).value })}
-                placeholder={t('txt_groups')}
-              />
-            </div>
-            <FloatingLabelInput
-              label={t('txt_group_description')}
-              value={props.draft.groupsDescription}
-              placeholder={t('txt_group_description_placeholder')}
-              onInput={(v) => props.onUpdateDraft({ groupsDescription: v })}
-            />
+          <>
             {groups.map((group, groupIndex) => {
-              const [collapsed, setCollapsed] = useState(false);
-              const hasLoginData = group.logins.some(l => l.username || l.password || l.thirdPartyPlatform);
+              const login = group.logins[0] || { id: crypto.randomUUID(), loginType: 'password' as const, username: '', password: '', totp: '', fido2Credentials: [], thirdPartyPlatform: '', thirdPartyAccount: '', phoneNumber: '' };
+              const hasLoginData = login.username || login.password || login.thirdPartyPlatform || login.phoneNumber;
               return (
-                <div key={group.id} className="group-card">
-                  <div className="group-head">
-                    <button type="button" className="group-collapse-btn" onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? t('txt_expand') : t('txt_collapse')}>
-                      {collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                    </button>
-                    <input
-                      className="input group-name-input"
-                      value={group.name}
-                      onInput={(e) => {
-                        const value = (e.currentTarget as HTMLInputElement).value;
-                        const updated = [...groups];
-                        updated[groupIndex] = { ...updated[groupIndex], name: value };
-                        props.onUpdateGroups(updated);
-                      }}
-                      placeholder={t('txt_group_name_placeholder')}
-                    />
+                <FloatingFieldset
+                  key={group.id}
+                  label={t('txt_login_info')}
+                  onSave={() => {}}
+                >
+                  {/* Login type selector: sms_code / qr_scan / password / third_party */}
+                  <div className="segmented-control">
                     <button
                       type="button"
-                      className="btn btn-secondary small group-remove-btn"
-                      disabled={props.busy}
+                      className={`segmented-btn ${login.loginType === 'sms_code' ? 'active' : ''}`}
                       onClick={() => {
-                        if (hasLoginData) {
-                          window.confirm(t('txt_remove_group_confirm')) && props.onRemoveGroup(groupIndex);
-                        } else {
-                          props.onRemoveGroup(groupIndex);
-                        }
+                        const updated = [...groups];
+                        const updatedLogin = { ...updated[groupIndex].logins[0], loginType: 'sms_code' as const };
+                        updated[groupIndex] = { ...updated[groupIndex], logins: [updatedLogin] };
+                        props.onUpdateGroups(updated);
                       }}
                     >
-                      <X size={14} className="btn-icon" />
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/><path d="M7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/></svg>
+                      {t('txt_sms_code_login')}
+                    </button>
+                    <button
+                      type="button"
+                      className={`segmented-btn ${login.loginType === 'qr_scan' ? 'active' : ''}`}
+                      onClick={() => {
+                        const updated = [...groups];
+                        const updatedLogin = { ...updated[groupIndex].logins[0], loginType: 'qr_scan' as const };
+                        updated[groupIndex] = { ...updated[groupIndex], logins: [updatedLogin] };
+                        props.onUpdateGroups(updated);
+                      }}
+                    >
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm8-12v8h8V3h-8zm6 6h-4V5h4v4zm-3 8h2v2h-2zm0-4h2v2h-2zm4 0h2v2h-2zm0 4h2v2h-2zm-4 4h2v2h-2zm4-4h2v2h-2z"/></svg>
+                      {t('txt_qr_scan_login')}
+                    </button>
+                    <button
+                      type="button"
+                      className={`segmented-btn ${login.loginType === 'password' ? 'active' : ''}`}
+                      onClick={() => {
+                        const updated = [...groups];
+                        const updatedLogin = { ...updated[groupIndex].logins[0], loginType: 'password' as const };
+                        updated[groupIndex] = { ...updated[groupIndex], logins: [updatedLogin] };
+                        props.onUpdateGroups(updated);
+                      }}
+                    >
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+                      {t('txt_password_login')}
+                    </button>
+                    <button
+                      type="button"
+                      className={`segmented-btn ${login.loginType === 'third_party' ? 'active' : ''}`}
+                      onClick={() => {
+                        const updated = [...groups];
+                        const updatedLogin = { ...updated[groupIndex].logins[0], loginType: 'third_party' as const };
+                        updated[groupIndex] = { ...updated[groupIndex], logins: [updatedLogin] };
+                        props.onUpdateGroups(updated);
+                      }}
+                    >
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                      {t('txt_third_party_login')}
                     </button>
                   </div>
-                  {!collapsed && (
-                    <div className="group-body">
+                  {/* Conditional fields based on login type */}
+                  {login.loginType === 'sms_code' && (
+                    <FloatingLabelInput
+                      label={t('txt_phone_number')}
+                      value={login.phoneNumber}
+                      type="tel"
+                      onInput={(v) => {
+                        const updated = [...groups];
+                        updated[groupIndex] = { ...updated[groupIndex], logins: [{ ...login, phoneNumber: v }] };
+                        props.onUpdateGroups(updated);
+                      }}
+                    />
+                  )}
+                  {login.loginType === 'qr_scan' && (
+                    <div className="platform-select-row">
+                      <PlatformIcon platform={login.thirdPartyPlatform || 'wechat'} />
+                      <select className="input" value={login.thirdPartyPlatform || 'wechat'} onInput={(e) => {
+                        const value = (e.currentTarget as HTMLSelectElement).value;
+                        const updated = [...groups];
+                        updated[groupIndex] = { ...updated[groupIndex], logins: [{ ...login, thirdPartyPlatform: value }] };
+                        props.onUpdateGroups(updated);
+                      }}>
+                        <option value="wechat">WeChat</option>
+                        <option value="qq">QQ</option>
+                        <option value="weibo">Weibo</option>
+                      </select>
+                    </div>
+                  )}
+                  {login.loginType === 'password' && (
+                    <>
                       <FloatingLabelInput
-                        label={t('txt_group_description')}
-                        value={group.description}
-                        placeholder={t('txt_group_description_placeholder')}
+                        label={t('txt_username')}
+                        value={login.username}
                         onInput={(v) => {
                           const updated = [...groups];
-                          updated[groupIndex] = { ...updated[groupIndex], description: v };
+                          updated[groupIndex] = { ...updated[groupIndex], logins: [{ ...login, username: v }] };
                           props.onUpdateGroups(updated);
                         }}
                       />
-
-                      {/* Logins */}
-                      <div className="group-logins-label">{t('txt_group_logins')}</div>
-                      {group.logins.map((login, loginIndex) => (
-                        <div key={login.id} className="group-login-card">
-                          <div className="group-login-head">
-                            <div className="segmented-control">
-                              <button
-                                type="button"
-                                className={`segmented-btn ${login.loginType === 'password' ? 'active' : ''}`}
-                                onClick={() => {
-                                  const updated = [...groups];
-                                  const updatedLogin = { ...updated[groupIndex].logins[loginIndex], loginType: 'password' as const };
-                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? updatedLogin : l) };
-                                  props.onUpdateGroups(updated);
-                                }}
-                              >
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
-                                {t('txt_password_login')}
-                              </button>
-                              <button
-                                type="button"
-                                className={`segmented-btn ${login.loginType === 'third_party' ? 'active' : ''}`}
-                                onClick={() => {
-                                  const updated = [...groups];
-                                  const updatedLogin = { ...updated[groupIndex].logins[loginIndex], loginType: 'third_party' as const };
-                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? updatedLogin : l) };
-                                  props.onUpdateGroups(updated);
-                                }}
-                              >
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-                                {t('txt_third_party_login')}
-                              </button>
-                            </div>
-                            <button
-                              type="button"
-                              className="btn btn-secondary small"
-                              onClick={() => props.onRemoveGroupLogin(groupIndex, loginIndex)}
-                            >
-                              <X size={14} className="btn-icon" />
-                            </button>
-                          </div>
-                          {login.loginType === 'password' ? (
-                            <>
-                              <FloatingLabelInput
-                                label={t('txt_username')}
-                                value={login.username}
-                                onInput={(v) => {
-                                  const updated = [...groups];
-                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, username: v } : l) };
-                                  props.onUpdateGroups(updated);
-                                }}
-                              />
-                              <label className="field field-compact">
-                                <span>{t('txt_password')}</span>
-                                <div className="leading-input-inner">
-                                  <input className="input" type="password" value={login.password} onInput={(e) => {
-                                    const value = (e.currentTarget as HTMLInputElement).value;
-                                    const updated = [...groups];
-                                    updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, password: value } : l) };
-                                    props.onUpdateGroups(updated);
-                                  }} />
-                                  <button type="button" className="input-icon-btn" title={t('txt_generate_password')} aria-label={t('txt_generate_password')} onClick={() => {
-                                    const pwd = generatePasswordWithOptions(pgLength, pgUppercase, pgLowercase, pgNumbers, pgSymbols, pgExcludeSimilar);
-                                    const updated = [...groups];
-                                    updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, password: pwd } : l) };
-                                    props.onUpdateGroups(updated);
-                                  }}>
-                                    <RefreshCw size={16} />
-                                  </button>
-                                </div>
-                              </label>
-                              <FloatingLabelInput
-                                label={t('txt_totp_secret')}
-                                value={login.totp}
-                                onInput={(v) => {
-                                  const updated = [...groups];
-                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, totp: v } : l) };
-                                  props.onUpdateGroups(updated);
-                                }}
-                              />
-                            </>
-                          ) : (
-                            <>
-                              <label className="field field-compact">
-                                <span>{t('txt_third_party_platform')}</span>
-                                <select className="input" value={login.thirdPartyPlatform} onInput={(e) => {
-                                  const value = (e.currentTarget as HTMLSelectElement).value;
-                                  const updated = [...groups];
-                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, thirdPartyPlatform: value } : l) };
-                                  props.onUpdateGroups(updated);
-                                }}>
-                                  <option value="">{t('txt_select_platform')}</option>
-                                  <option value="google">Google</option>
-                                  <option value="apple">Apple</option>
-                                  <option value="microsoft">Microsoft</option>
-                                  <option value="twitter">Twitter / X</option>
-                                  <option value="facebook">Facebook</option>
-                                  <option value="github">GitHub</option>
-                                  <option value="discord">Discord</option>
-                                  <option value="telegram">Telegram</option>
-                                  <option value="wechat">WeChat</option>
-                                  <option value="qq">QQ</option>
-                                  <option value="weibo">Weibo</option>
-                                </select>
-                              </label>
-                              <FloatingLabelInput
-                                label={t('txt_third_party_account')}
-                                value={login.thirdPartyAccount}
-                                onInput={(v) => {
-                                  const updated = [...groups];
-                                  updated[groupIndex] = { ...updated[groupIndex], logins: updated[groupIndex].logins.map((l, i) => i === loginIndex ? { ...l, thirdPartyAccount: v } : l) };
-                                  props.onUpdateGroups(updated);
-                                }}
-                              />
-                            </>
-                          )}
-                        </div>
-                      ))}
-                      <button type="button" className="btn btn-secondary small group-add-login-btn" onClick={() => {
-                        const type = window.confirm(t('txt_add_password_login') + '?' ) ? 'password' : 'third_party';
-                        props.onAddGroupLogin(groupIndex, type);
-                      }}>
-                        <Plus size={14} className="btn-icon" /> {t('txt_add_login_to_group')}
-                      </button>
-
-                      {/* Group custom fields */}
-                      {group.customFields.length > 0 && (
-                        <div className="group-section-label">{t('txt_group_custom_fields')}</div>
-                      )}
-                      {group.customFields.map((field, fieldIndex) => (
-                        <div key={`group-field-${groupIndex}-${fieldIndex}`} className="group-custom-field-row">
-                          <input className="input" value={field.label} placeholder={t('txt_field_label')} onInput={(e) => {
-                            const value = (e.currentTarget as HTMLInputElement).value;
-                            const updated = [...groups];
-                            updated[groupIndex] = { ...updated[groupIndex], customFields: updated[groupIndex].customFields.map((f, i) => i === fieldIndex ? { ...f, label: value } : f) };
-                            props.onUpdateGroups(updated);
-                          }} />
-                          <input className="input" value={field.value} placeholder={t('txt_text')} onInput={(e) => {
-                            const value = (e.currentTarget as HTMLInputElement).value;
-                            const updated = [...groups];
-                            updated[groupIndex] = { ...updated[groupIndex], customFields: updated[groupIndex].customFields.map((f, i) => i === fieldIndex ? { ...f, value: value } : f) };
-                            props.onUpdateGroups(updated);
-                          }} />
-                          <button type="button" className="btn btn-secondary small" onClick={() => {
-                            const updated = [...groups];
-                            updated[groupIndex] = { ...updated[groupIndex], customFields: updated[groupIndex].customFields.filter((_, i) => i !== fieldIndex) };
-                            props.onUpdateGroups(updated);
-                          }}>
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                      <button type="button" className="btn btn-secondary small group-add-field-btn" onClick={() => {
+                      <FloatingLabelInput
+                        label={t('txt_password')}
+                        value={login.password}
+                        type={showPassword ? 'text' : 'password'}
+                        onInput={(v) => {
+                          const updated = [...groups];
+                          updated[groupIndex] = { ...updated[groupIndex], logins: [{ ...login, password: v }] };
+                          props.onUpdateGroups(updated);
+                        }}
+                      >
+                        <button type="button" className="input-icon-btn" title={t('txt_generate_password')} aria-label={t('txt_generate_password')} onClick={() => {
+                          const pwd = generatePasswordWithOptions(pgLength, pgUppercase, pgLowercase, pgNumbers, pgSymbols, pgExcludeSimilar);
+                          const updated = [...groups];
+                          updated[groupIndex] = { ...updated[groupIndex], logins: [{ ...login, password: pwd }] };
+                          props.onUpdateGroups(updated);
+                        }}>
+                          <RefreshCw size={16} />
+                        </button>
+                        <button type="button" className="input-icon-btn" title={showPassword ? t('txt_hide_password') : t('txt_show_password')} aria-label={showPassword ? t('txt_hide_password') : t('txt_show_password')} onClick={() => setShowPassword(!showPassword)}>
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </FloatingLabelInput>
+                    </>
+                  )}
+                  {login.loginType === 'third_party' && (
+                    <div className="platform-select-row">
+                      <PlatformIcon platform={login.thirdPartyPlatform || 'google'} />
+                      <select className="input" value={login.thirdPartyPlatform || 'google'} onInput={(e) => {
+                        const value = (e.currentTarget as HTMLSelectElement).value;
                         const updated = [...groups];
-                        updated[groupIndex] = { ...updated[groupIndex], customFields: [...updated[groupIndex].customFields, { type: 0, label: '', value: '' }] };
+                        updated[groupIndex] = { ...updated[groupIndex], logins: [{ ...login, thirdPartyPlatform: value }] };
                         props.onUpdateGroups(updated);
                       }}>
-                        <Plus size={14} className="btn-icon" /> {t('txt_add_field')}
-                      </button>
-
-                      {/* Group attachments */}
-                      <div className="group-section-label">{t('txt_group_attachments')}</div>
-                      <div className="group-attachment-list">
-                        {group.attachments.map((file, attIndex) => (
-                          <div key={`group-att-${groupIndex}-${attIndex}`} className="attachment-row">
-                            <Paperclip size={14} />
-                            <span className="value-ellipsis">{file.name}</span>
-                            <button type="button" className="btn btn-secondary small" onClick={() => {
-                              const updated = [...groups];
-                              updated[groupIndex] = { ...updated[groupIndex], attachments: updated[groupIndex].attachments.filter((_, i) => i !== attIndex) };
-                              props.onUpdateGroups(updated);
-                            }}>
-                              <X size={14} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      <button type="button" className="btn btn-secondary small group-add-attachment-btn" onClick={() => {
-                        const input = document.createElement('input');
-                        input.type = 'file';
-                        input.multiple = true;
-                        input.onchange = () => {
-                          if (input.files) {
-                            const updated = [...groups];
-                            updated[groupIndex] = { ...updated[groupIndex], attachments: [...updated[groupIndex].attachments, ...Array.from(input.files)] };
-                            props.onUpdateGroups(updated);
-                          }
-                        };
-                        input.click();
-                      }}>
-                        <Plus size={14} className="btn-icon" /> {t('txt_upload_attachments')}
-                      </button>
+                        <option value="">{t('txt_select_platform')}</option>
+                        <option value="google">Google</option>
+                        <option value="apple">Apple</option>
+                        <option value="microsoft">Microsoft</option>
+                        <option value="twitter">Twitter / X</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="github">GitHub</option>
+                        <option value="discord">Discord</option>
+                        <option value="telegram">Telegram</option>
+                        <option value="wechat">WeChat</option>
+                        <option value="qq">QQ</option>
+                        <option value="weibo">Weibo</option>
+                      </select>
                     </div>
                   )}
-                </div>
+                  {/* TOTP */}
+                  <FloatingLabelInput
+                    label={t('txt_totp_secret')}
+                    value={login.totp}
+                    onInput={(v) => {
+                      const updated = [...groups];
+                      updated[groupIndex] = { ...updated[groupIndex], logins: [{ ...login, totp: v }] };
+                      props.onUpdateGroups(updated);
+                    }}
+                  >
+                    <button type="button" className="input-icon-btn" title={t('txt_scan_totp_qr')} aria-label={t('txt_scan_totp_qr')} disabled={props.busy} onClick={() => { setTotpQrStatus(''); setTotpQrOpen(true); }}>
+                      <QrCode size={18} className="btn-icon" />
+                    </button>
+                  </FloatingLabelInput>
+                  {/* Delete group button — full width, red border */}
+                  <button
+                    type="button"
+                    className="btn btn-danger full"
+                    disabled={props.busy}
+                    onClick={() => {
+                      if (hasLoginData && !window.confirm(t('txt_remove_group_confirm'))) return;
+                      props.onRemoveGroup(groupIndex);
+                    }}
+                  >
+                    <X size={14} className="btn-icon" />
+                    {t('txt_remove')}
+                  </button>
+                </FloatingFieldset>
               );
             })}
-          </div>
+          </>
         );
       })()}
 
@@ -1210,6 +1237,60 @@ export default function VaultEditor(props: VaultEditorProps) {
           {t('txt_master_password_reprompt')}
         </label>
       </FloatingFieldset>
+
+      {/* ── Card Designer trigger (hidden for this version) ── */}
+      {/*
+      <div className="detail-actions">
+        <button type="button" className="btn btn-secondary" onClick={handleOpenDesigner}>
+          <SettingsIcon size={14} className="btn-icon" />
+          卡片设计器
+        </button>
+      </div>
+      */}
+
+      {designerOpen && typeof document !== 'undefined' ? createPortal((
+        <div className="dialog-mask open" onClick={(e) => e.target === e.currentTarget && handleDesignerCancel()}>
+          <section className="dialog-card card-designer-dialog open" role="dialog" aria-modal="true" aria-label={t('txt_designer_dialog_title')}>
+            <div className="card-designer-dialog-head">
+              <h3 className="dialog-title">{t('txt_designer_dialog_title')}</h3>
+              <div className="card-designer-dialog-actions">
+                <button type="button" className="btn small btn-ghost" onClick={handleDesignerSave} disabled={designerSaving}>
+                  {designerSaving ? <Loader2 size={14} className="spin-icon" /> : t('txt_designer_save')}
+                </button>
+                <button type="button" className="pw-gen-close" onClick={handleDesignerCancel} title={t('txt_designer_cancel')}>
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+            <CardDesigner schema={dynamicSchema} onChange={setDynamicSchema} onToasts={setDesignerToasts} />
+            {designerToasts.length > 0 && (
+              <div className="designer-toast-stack">
+                {designerToasts.map((toast) => (
+                  <div key={toast.id} className={`designer-toast designer-toast-${toast.type ?? 'info'}`}>
+                    <span>{toast.text}</span>
+                    {toast.undoAction && (
+                      <button
+                        type="button"
+                        className="designer-toast-undo"
+                        onClick={() => { toast.undoAction?.(); setDesignerToasts(prev => prev.filter(t => t.id !== toast.id)); }}
+                      >
+                        撤销
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="designer-toast-close"
+                      onClick={() => setDesignerToasts(prev => prev.filter(t => t.id !== toast.id))}
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      ), document.body) : null}
 
       <div className="detail-actions">
         <div className="actions">

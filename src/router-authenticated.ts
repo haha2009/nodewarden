@@ -84,6 +84,11 @@ import {
   handleListPendingAuthRequests,
   handleUpdateAuthRequest,
 } from './handlers/auth-requests';
+import {
+  handleGetDynamicSchema,
+  handlePutDynamicSchema,
+  handleValidateDynamicSchema,
+} from './handlers/dynamic-cards';
 
 export async function handleAuthenticatedRoute(
   request: Request,
@@ -271,6 +276,10 @@ export async function handleAuthenticatedRoute(
     if (attachmentDeleteMatch && method === 'POST') {
       return handleDeleteAttachment(request, env, userId, cipherId, attachmentDeleteMatch[1]);
     }
+
+    if (subPath === '/dynamic-schema' && method === 'GET') return handleGetDynamicSchema(request, env, userId, cipherId);
+    if (subPath === '/dynamic-schema' && (method === 'PUT' || method === 'POST')) return handlePutDynamicSchema(request, env, userId, cipherId);
+    if (subPath === '/dynamic-schema/validate' && (method === 'POST' || method === 'PUT')) return handleValidateDynamicSchema(request, env, userId, cipherId);
   }
 
   if (path === '/api/folders') {

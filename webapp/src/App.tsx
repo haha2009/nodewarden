@@ -32,7 +32,7 @@ import {
 import { clearAuditLogs, getAuditLogSettings, listAdminInvites, listAdminUsers, listAuditLogs, saveAuditLogSettings, type AuditLogFilters } from '@/lib/api/admin';
 import { getDomainRules, saveDomainRules } from '@/lib/api/domains';
 import { getSends } from '@/lib/api/send';
-import { repairCipherKeyMismatches, repairCipherUriChecksums } from '@/lib/api/vault';
+import { repairCipherKeyMismatches, repairCipherUriChecksums, saveDynamicSchema } from '@/lib/api/vault';
 import { getCachedVaultCoreSnapshot, invalidateVaultCoreSyncSnapshot, loadVaultCoreSyncSnapshot } from '@/lib/api/vault-sync';
 import { silentlyRepairBackupSettingsIfNeeded } from '@/lib/backup-settings-repair';
 import {
@@ -81,7 +81,7 @@ import {
   createDemoMainRoutesProps,
 } from '@/lib/demo';
 import type { AdminBackupSettings } from '@/lib/api/backup';
-import type { AdminInvite, AdminUser, AppPhase, AuditLogSettings, AuthRequest, AuthorizedDevice, Cipher, CustomEquivalentDomain, DomainRules, Folder as VaultFolder, Profile, Send, SessionState } from '@/lib/types';
+import type { AdminInvite, AdminUser, AppPhase, AuditLogSettings, AuthRequest, AuthorizedDevice, Cipher, CustomEquivalentDomain, DomainRules, DynamicCardSchema, Folder as VaultFolder, Profile, Send, SessionState } from '@/lib/types';
 import type { VaultCoreSnapshot } from '@/lib/vault-cache';
 
 function isBackupProgressDetail(value: unknown): value is BackupProgressDetail {
@@ -1672,6 +1672,9 @@ export default function App() {
     uploadingAttachmentName: vaultSendActions.uploadingAttachmentName,
     attachmentUploadPercent: vaultSendActions.attachmentUploadPercent,
     onRefreshVault: vaultSendActions.refreshVault,
+    onSaveDynamicSchema: async (cipherId: string, schema: DynamicCardSchema) => {
+      await saveDynamicSchema(authedFetch, cipherId, schema);
+    },
     onCreateSend: vaultSendActions.createSend,
     onUpdateSend: vaultSendActions.updateSend,
     onDeleteSend: vaultSendActions.deleteSend,

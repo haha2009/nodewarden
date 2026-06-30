@@ -8,7 +8,7 @@ import type { AdminBackupImportResponse, AdminBackupRunResponse, AdminBackupSett
 import type { AuditLogFilters } from '@/lib/api/admin';
 import type { CiphersImportPayload } from '@/lib/api/vault';
 import { t } from '@/lib/i18n';
-import type { AccountPasskeyCredential, AdminInvite, AdminUser, AuditLogListResult, AuditLogSettings, AuthRequest, AuthorizedDevice, Cipher, CustomEquivalentDomain, DomainRules, Folder as VaultFolder, Profile, Send, SendDraft, SessionState, VaultDraft } from '@/lib/types';
+import type { AccountPasskeyCredential, AdminInvite, AdminUser, AuditLogListResult, AuditLogSettings, AuthRequest, AuthorizedDevice, Cipher, CustomEquivalentDomain, DomainRules, DynamicCardSchema, Folder as VaultFolder, Profile, Send, SendDraft, SessionState, VaultDraft } from '@/lib/types';
 import type { ExportRequest } from '@/lib/export-formats';
 
 const VaultPage = lazy(() => import('@/components/VaultPage'));
@@ -154,6 +154,7 @@ export interface AppMainRoutesProps {
   onDeleteRemoteBackup: (destinationId: string, path: string) => Promise<void>;
   onRestoreRemoteBackup: (destinationId: string, path: string, replaceExisting?: boolean) => Promise<AdminBackupImportResponse>;
   onRestoreRemoteBackupAllowingChecksumMismatch: (destinationId: string, path: string, replaceExisting?: boolean) => Promise<AdminBackupImportResponse>;
+  onSaveDynamicSchema: (cipherId: string, schema: DynamicCardSchema) => Promise<void>;
 }
 
 export default function AppMainRoutes(props: AppMainRoutesProps) {
@@ -242,8 +243,10 @@ export default function AppMainRoutes(props: AppMainRoutesProps) {
             downloadingAttachmentKey={props.downloadingAttachmentKey}
             attachmentDownloadPercent={props.attachmentDownloadPercent}
             uploadingAttachmentName={props.uploadingAttachmentName}
-            attachmentUploadPercent={props.attachmentUploadPercent}
+          attachmentUploadPercent={props.attachmentUploadPercent}
             mobileSidebarToggleKey={props.mobileSidebarToggleKey}
+            onRefreshVault={props.onRefreshVault}
+            onSaveDynamicSchema={props.onSaveDynamicSchema}
           />
         </Suspense>
       </Route>

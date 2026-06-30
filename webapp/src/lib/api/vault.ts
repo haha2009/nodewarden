@@ -535,6 +535,7 @@ function draftFromDecryptedCipher(cipher: Cipher): VaultDraft {
     loginType: 'password',
     thirdPartyPlatform: '',
     thirdPartyAccount: '',
+    phoneNumber: '',
     loginFido2Credentials: [],
     customIcon: '',
     cardholderName: '',
@@ -588,7 +589,7 @@ function draftFromDecryptedCipher(cipher: Cipher): VaultDraft {
     const decThirdPartyPlatform = (cipher.login as Record<string, string>).decThirdPartyPlatform || '';
     draft.thirdPartyPlatform = decThirdPartyPlatform;
     draft.thirdPartyAccount = (cipher.login as Record<string, string>).decThirdPartyAccount || '';
-    draft.loginType = decLoginType === 'third_party' || (decLoginType !== 'password' && !!decThirdPartyPlatform) ? 'third_party' : 'password';
+    draft.loginType = (decLoginType === 'sms_code' || decLoginType === 'qr_scan' || decLoginType === 'third_party') ? decLoginType : (!!decThirdPartyPlatform ? 'third_party' : 'password');
     draft.loginFido2Credentials = Array.isArray(cipher.login.fido2Credentials)
       ? cipher.login.fido2Credentials.filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
       : [];
@@ -1154,6 +1155,10 @@ async function buildCipherPayload(
     passwordHistory: await encryptPasswordHistory(cipher?.passwordHistory, keys.enc, keys.mac),
   };
 
+  if (cipher?.dynamicSchema) {
+    payload.dynamicSchema = cipher.dynamicSchema;
+  }
+
   if (cipher?.id) {
     payload.id = cipher.id;
     payload.key = keys.key;
@@ -1375,5 +1380,17 @@ export async function bulkMoveCiphers(
       body: JSON.stringify({ ids: chunk, folderId }),
     });
     if (!resp.ok) throw new Error('Bulk move failed');
+  }
+}
+
+export async function saveDynamicSchema(authedFetch: AuthedFetch, cipherId: string, schema: DynamicCardSchema): Promise<void> {
+  const resp = await authedFetch(`/api/ciphers/${encodeURIComponent(cipherId)}/dynamic-schema`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ dynamicSchema: schema }),
+  });
+  if (!resp.ok) {
+    const msg = await parseErrorMessage(resp, 'Save dynamic schema failed');
+    throw new Error(msg);
   }
 }

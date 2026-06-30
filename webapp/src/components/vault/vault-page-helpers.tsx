@@ -558,6 +558,7 @@ export function createEmptyGroupLogin(): VaultDraftGroupLogin {
     fido2Credentials: [],
     thirdPartyPlatform: '',
     thirdPartyAccount: '',
+    phoneNumber: '',
   };
 }
 
@@ -575,6 +576,7 @@ export function createEmptyGroup(): VaultDraftGroup {
 
 export function createEmptyDraft(type: number): VaultDraft {
   return {
+    id: crypto.randomUUID(),
     type,
     favorite: false,
     name: '',
@@ -583,6 +585,7 @@ export function createEmptyDraft(type: number): VaultDraft {
     loginType: 'password',
     thirdPartyPlatform: '',
     thirdPartyAccount: '',
+    phoneNumber: '',
     notes: '',
     reprompt: false,
     loginUsername: '',
@@ -653,7 +656,7 @@ export function draftFromCipher(cipher: Cipher): VaultDraft {
     const decThirdPartyPlatform = (cipher.login as Record<string, string>).decThirdPartyPlatform || '';
     draft.thirdPartyPlatform = decThirdPartyPlatform;
     draft.thirdPartyAccount = (cipher.login as Record<string, string>).decThirdPartyAccount || '';
-    draft.loginType = decLoginType === 'third_party' || (decLoginType !== 'password' && !!decThirdPartyPlatform) ? 'third_party' : 'password';
+    draft.loginType = (decLoginType === 'sms_code' || decLoginType === 'qr_scan' || decLoginType === 'third_party') ? decLoginType : (!!decThirdPartyPlatform ? 'third_party' : 'password');
     if (!draft.loginUris.length) draft.loginUris = [createEmptyLoginUri()];
   }
   if (cipher.card) {

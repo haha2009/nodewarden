@@ -25,6 +25,7 @@ interface CipherRow {
   updated_at: string;
   archived_at: string | null;
   deleted_at: string | null;
+  dynamic_schema: string | null;
 }
 
 const CIPHER_SCALAR_DATA_KEYS = new Set([
@@ -55,6 +56,8 @@ const CIPHER_SCALAR_DATA_KEYS = new Set([
   'deletedAt',
   'deleted_at',
   'deletedDate',
+  'dynamicSchema',
+  'dynamic_schema',
 ]);
 
 function buildCipherData(cipher: Cipher, folderId: string | null): string {
@@ -88,6 +91,7 @@ function parseCipherRow(row: CipherRow | null | undefined): Cipher | null {
       updatedAt: row.updated_at,
       archivedAt: row.archived_at ?? parsed.archivedAt ?? parsed.archivedDate ?? null,
       deletedAt: row.deleted_at ?? null,
+      dynamicSchema: row.dynamic_schema ?? null,
     };
   } catch {
     console.error('Corrupted cipher data, id:', row.id);
@@ -96,7 +100,7 @@ function parseCipherRow(row: CipherRow | null | undefined): Cipher | null {
 }
 
 function selectCipherColumns(): string {
-  return 'id, user_id, type, folder_id, name, notes, favorite, data, reprompt, key, created_at, updated_at, archived_at, deleted_at';
+  return 'id, user_id, type, folder_id, name, notes, favorite, data, reprompt, key, created_at, updated_at, archived_at, deleted_at, dynamic_schema';
 }
 
 export async function getCipher(db: D1Database, id: string): Promise<Cipher | null> {
@@ -111,10 +115,10 @@ export async function saveCipher(db: D1Database, safeBind: SafeBind, cipher: Cip
   const folderId = normalizeOptionalId(cipher.folderId);
   const data = buildCipherData(cipher, folderId);
   const stmt = db.prepare(
-    'INSERT INTO ciphers(id, user_id, type, folder_id, name, notes, favorite, data, reprompt, key, created_at, updated_at, archived_at, deleted_at) ' +
-    'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ' +
+    'INSERT INTO ciphers(id, user_id, type, folder_id, name, notes, favorite, data, reprompt, key, created_at, updated_at, archived_at, deleted_at, dynamic_schema) ' +
+    'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ' +
     'ON CONFLICT(id) DO UPDATE SET ' +
-    'user_id=excluded.user_id, type=excluded.type, folder_id=excluded.folder_id, name=excluded.name, notes=excluded.notes, favorite=excluded.favorite, data=excluded.data, reprompt=excluded.reprompt, key=excluded.key, updated_at=excluded.updated_at, archived_at=excluded.archived_at, deleted_at=excluded.deleted_at'
+    'user_id=excluded.user_id, type=excluded.type, folder_id=excluded.folder_id, name=excluded.name, notes=excluded.notes, favorite=excluded.favorite, data=excluded.data, reprompt=excluded.reprompt, key=excluded.key, updated_at=excluded.updated_at, archived_at=excluded.archived_at, deleted_at=excluded.deleted_at, dynamic_schema=COALESCE(excluded.dynamic_schema, ciphers.dynamic_schema)'
   );
   await safeBind(
     stmt,
@@ -131,7 +135,8 @@ export async function saveCipher(db: D1Database, safeBind: SafeBind, cipher: Cip
     cipher.createdAt,
     cipher.updatedAt,
     cipher.archivedAt ?? null,
-    cipher.deletedAt
+    cipher.deletedAt,
+    cipher.dynamicSchema ?? null
   ).run();
 }
 

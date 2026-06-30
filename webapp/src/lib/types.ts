@@ -189,6 +189,7 @@ export interface Cipher {
   decIcon?: string;
   /** Frontend-only: group data (not yet persisted to backend) */
   groups?: VaultDraftGroup[];
+  dynamicSchema?: DynamicCardSchema | null;
   [key: string]: unknown;
 }
 
@@ -253,13 +254,14 @@ export interface VaultDraftField {
 
 export interface VaultDraftGroupLogin {
   id: string;
-  loginType: 'password' | 'third_party';
+  loginType: 'sms_code' | 'qr_scan' | 'password' | 'third_party';
   username: string;
   password: string;
   totp: string;
   fido2Credentials: Array<Record<string, unknown>>;
   thirdPartyPlatform: string;
   thirdPartyAccount: string;
+  phoneNumber: string;
 }
 
 export interface VaultDraftGroup {
@@ -281,12 +283,13 @@ export interface VaultDraft {
   notes: string;
   reprompt: boolean;
   customIcon: string;
-  loginType: 'password' | 'third_party';
+  loginType: 'sms_code' | 'qr_scan' | 'password' | 'third_party';
   loginUsername: string;
   loginPassword: string;
   loginTotp: string;
   thirdPartyPlatform: string;
   thirdPartyAccount: string;
+  phoneNumber: string;
   loginUris: VaultDraftLoginUri[];
   loginFido2Credentials: Array<Record<string, unknown>>;
   cardholderName: string;
@@ -320,6 +323,78 @@ export interface VaultDraft {
   groups: VaultDraftGroup[];
   groupsTitle: string;
   groupsDescription: string;
+}
+
+// ── Dynamic Card Schema (server-driven card rendering) ──
+
+export type DynamicFieldType =
+  | 'text'
+  | 'password'
+  | 'textarea'
+  | 'toggle'
+  | 'button'
+  | 'upload'
+  | 'select'
+  | 'date'
+  | 'url'
+  | 'email'
+  | 'phone'
+  | 'number'
+  | 'color'
+  | 'markdown'
+  | 'link';
+
+export interface DynamicFieldSchema {
+  /** Unique key for this field within the card */
+  key: string;
+  /** Field type determines which control to render */
+  type: DynamicFieldType;
+  /** Label shown above/beside the control */
+  label: string;
+  /** Current value (string for most, 'true'/'false' for toggle) */
+  value?: string;
+  /** Placeholder text for inputs */
+  placeholder?: string;
+  /** Whether the field is required */
+  required?: boolean;
+  /** Whether the field is disabled/read-only */
+  disabled?: boolean;
+  /** Helper text shown below the field */
+  hint?: string;
+  /** For type='select': available options */
+  options?: Array<{ label: string; value: string }>;
+  /** For type='button': button style variant */
+  variant?: 'primary' | 'secondary' | 'danger';
+  /** For type='button': whether it triggers a server action */
+  action?: string;
+  /** For type='link': the URL to navigate to */
+  href?: string;
+  /** For type='upload': accepted file types */
+  accept?: string;
+  /** For type='number'|'text': min/max constraints */
+  min?: number;
+  max?: number;
+  /** Arbitrary extra config for future extensibility */
+  meta?: Record<string, unknown>;
+}
+
+export interface DynamicCardSchema {
+  /** Unique key for this card */
+  key: string;
+  /** Card title (shown in the floating legend) */
+  title: string;
+  /** Whether the title is editable */
+  titleEditable?: boolean;
+  /** Optional description shown below the title */
+  description?: string;
+  /** Fields in this card */
+  fields?: DynamicFieldSchema[];
+  /** Nested sub-cards */
+  children?: DynamicCardSchema[];
+  /** Whether this card starts collapsed */
+  collapsed?: boolean;
+  /** Visual variant */
+  variant?: 'default' | 'accent' | 'warning';
 }
 
 export interface ListResponse<T> {

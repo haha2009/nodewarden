@@ -246,6 +246,7 @@ export async function handleCiphersImport(request: Request, env: Env, userId: st
       reprompt: c.reprompt ?? 0,
       sshKey: normalizeCipherSshKeyForCompatibility((c as any).sshKey ?? null),
       key: key ?? null,
+      dynamicSchema: (c as any).dynamicSchema ?? null,
       createdAt: now,
       updatedAt: now,
       archivedAt: null,
