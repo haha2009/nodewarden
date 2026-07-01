@@ -138,6 +138,7 @@ export async function decryptVaultCore(args: DecryptVaultCoreArgs): Promise<Decr
           decLoginType: await decryptCipherField((cipher.login as Record<string, string | null>).loginType || '', itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
           decThirdPartyPlatform: await decryptCipherField((cipher.login as Record<string, string | null>).thirdPartyPlatform || '', itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
           decThirdPartyAccount: await decryptCipherField((cipher.login as Record<string, string | null>).thirdPartyAccount || '', itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
+          decPhoneNumber: await decryptCipherField((cipher.login as Record<string, string | null>).phoneNumber || '', itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
           uris: await Promise.all(
             (cipher.login.uris || []).map(async (uri) => ({
               ...uri,

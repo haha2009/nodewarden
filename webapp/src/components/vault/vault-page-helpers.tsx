@@ -718,6 +718,7 @@ export function draftFromCipher(cipher: Cipher): VaultDraft {
       const decThirdPartyAccount = (cipher.login as Record<string, string>).decThirdPartyAccount || '';
       defaultLogin.thirdPartyPlatform = decThirdPartyPlatform;
       defaultLogin.thirdPartyAccount = decThirdPartyAccount;
+      defaultLogin.phoneNumber = (cipher.login as Record<string, string>).decPhoneNumber || '';
       if (decThirdPartyPlatform) defaultLogin.loginType = 'third_party';
 
       const defaultGroup = createEmptyGroup();

@@ -63,6 +63,7 @@ export async function decryptSingleCipher(
       decLoginType: await decryptCipherField((encrypted.login as Record<string, string | null>).loginType, itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
       decThirdPartyPlatform: await decryptCipherField((encrypted.login as Record<string, string | null>).thirdPartyPlatform, itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
       decThirdPartyAccount: await decryptCipherField((encrypted.login as Record<string, string | null>).thirdPartyAccount, itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
+      decPhoneNumber: await decryptCipherField((encrypted.login as Record<string, string | null>).phoneNumber, itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
       uris: await Promise.all((encrypted.login.uris || []).map(async (u) => ({
         ...u,
         decUri: await decryptCipherField(u.uri, itemEnc, itemMac, userEnc, userMac, canFallbackToUserKey),
