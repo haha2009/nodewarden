@@ -525,6 +525,27 @@ export default function VaultEditor(props: VaultEditorProps) {
             </div>
           </div>
         </div>
+        {/* 项目介绍 */}
+        <div className="description-section" style={{ marginBottom: '16px' }}>
+          <label className="field">
+            <span>{t('txt_description_zh')}</span>
+            <textarea
+              className="input textarea"
+              value={props.draft.descriptionZh}
+              onInput={(e) => props.onUpdateDraft({ descriptionZh: (e.currentTarget as HTMLTextAreaElement).value })}
+              placeholder={t('txt_description_zh_placeholder')}
+            />
+          </label>
+          <label className="field" style={{ marginTop: '16px' }}>
+            <span>{t('txt_description_en')}</span>
+            <textarea
+              className="input textarea"
+              value={props.draft.descriptionEn}
+              onInput={(e) => props.onUpdateDraft({ descriptionEn: (e.currentTarget as HTMLTextAreaElement).value })}
+              placeholder={t('txt_description_en_placeholder')}
+            />
+          </label>
+        </div>
       </FloatingFieldset>
 
       {/* Login Info card — password/third-party login fields + TOTP */}

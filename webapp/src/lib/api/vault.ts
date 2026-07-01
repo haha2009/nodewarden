@@ -590,6 +590,8 @@ function draftFromDecryptedCipher(cipher: Cipher): VaultDraft {
     draft.thirdPartyPlatform = decThirdPartyPlatform;
     draft.thirdPartyAccount = (cipher.login as Record<string, string>).decThirdPartyAccount || '';
     draft.phoneNumber = (cipher.login as Record<string, string>).decPhoneNumber || '';
+    draft.descriptionZh = (cipher.login as Record<string, string>).decDescriptionZh || '';
+    draft.descriptionEn = (cipher.login as Record<string, string>).decDescriptionEn || '';
     draft.loginType = (decLoginType === 'sms_code' || decLoginType === 'qr_scan' || decLoginType === 'third_party') ? decLoginType : (!!decThirdPartyPlatform ? 'third_party' : 'password');
     draft.loginFido2Credentials = Array.isArray(cipher.login.fido2Credentials)
       ? cipher.login.fido2Credentials.filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
@@ -1187,6 +1189,8 @@ async function buildCipherPayload(
       thirdPartyPlatform: await encryptTextValue(draft.thirdPartyPlatform, keys.enc, keys.mac),
       thirdPartyAccount: await encryptTextValue(draft.thirdPartyAccount, keys.enc, keys.mac),
       phoneNumber: await encryptTextValue(draft.phoneNumber, keys.enc, keys.mac),
+      descriptionZh: await encryptTextValue(draft.descriptionZh, keys.enc, keys.mac),
+      descriptionEn: await encryptTextValue(draft.descriptionEn, keys.enc, keys.mac),
       passwordRevisionDate: passwordChanged ? now : existingLogin.passwordRevisionDate ?? null,
       fido2Credentials: await normalizeFido2Credentials(existingFido2, keys.enc, keys.mac),
       uris: await encryptUris(draft.loginUris || [], keys.enc, keys.mac),

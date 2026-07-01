@@ -290,6 +290,8 @@ export interface VaultDraft {
   thirdPartyPlatform: string;
   thirdPartyAccount: string;
   phoneNumber: string;
+  descriptionZh: string;
+  descriptionEn: string;
   loginUris: VaultDraftLoginUri[];
   loginFido2Credentials: Array<Record<string, unknown>>;
   cardholderName: string;

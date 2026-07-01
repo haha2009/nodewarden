@@ -123,6 +123,8 @@ function buildEmptyImportDraft(type: number): VaultDraft {
     thirdPartyPlatform: '',
     thirdPartyAccount: '',
     phoneNumber: '',
+    descriptionZh: '',
+    descriptionEn: '',
     loginFido2Credentials: [],
     cardholderName: '',
     cardNumber: '',
