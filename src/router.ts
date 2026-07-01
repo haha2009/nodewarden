@@ -16,13 +16,11 @@ function jwtSecretUnsafeReason(env: Env): 'missing' | 'default' | 'too_short' | 
 
 function isImportBypassRequest(request: Request, path: string, method: string): boolean {
   if (request.headers.get('X-NodeWarden-Import') !== '1') return false;
-
   if (method === 'POST') {
     if (path === '/api/ciphers/import') return true;
     if (/^\/api\/ciphers\/[a-f0-9-]+\/attachment\/v2$/i.test(path)) return true;
     if (/^\/api\/ciphers\/[a-f0-9-]+\/attachment\/[a-f0-9-]+$/i.test(path)) return true;
   }
-
   return false;
 }
 
@@ -37,35 +35,16 @@ export async function handleRequest(request: Request, env: Env): Promise<Respons
     maxRequests: number = LIMITS.rateLimit.publicRequestsPerMinute
   ): Promise<Response | null> {
     if (!clientId) {
-      return new Response(
-        JSON.stringify({
-          error: 'Forbidden',
-          error_description: 'Client IP is required',
-        }),
-        {
-          status: 403,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      return new Response(JSON.stringify({ error: 'Forbidden', error_description: 'Client IP is required' }), {
+        status: 403, headers: { 'Content-Type': 'application/json' },
+      });
     }
-
     const rateLimit = new RateLimitService(env.DB);
     const check = await rateLimit.consumeBudget(`${clientId}:${category}`, maxRequests);
     if (check.allowed) return null;
-
     return new Response(
-      JSON.stringify({
-        error: 'Too many requests',
-        error_description: `Rate limit exceeded. Try again in ${check.retryAfterSeconds} seconds.`,
-      }),
-      {
-        status: 429,
-        headers: {
-          'Content-Type': 'application/json',
-          'Retry-After': String(check.retryAfterSeconds || 60),
-          'X-RateLimit-Remaining': '0',
-        },
-      }
+      JSON.stringify({ error: 'Too many requests', error_description: `Rate limit exceeded. Try again in ${check.retryAfterSeconds} seconds.` }),
+      { status: 429, headers: { 'Content-Type': 'application/json', 'Retry-After': String(check.retryAfterSeconds || 60), 'X-RateLimit-Remaining': '0' } }
     );
   }
 

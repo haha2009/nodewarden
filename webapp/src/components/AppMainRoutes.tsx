@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'preact/compat';
 import { useEffect } from 'preact/hooks';
 import { Link, Route, Switch } from 'wouter';
-import { ArrowUpDown, Cloud, FileClock, Globe2, LogOut, Settings as SettingsIcon, Shield, ShieldUser } from 'lucide-preact';
+import { ArrowUpDown, Cloud, FileClock, Globe2, LogOut, Settings as SettingsIcon, Shield, ShieldUser, Sparkles } from 'lucide-preact';
 import type { ImportAttachmentFile, ImportResultSummary } from '@/components/ImportPage';
 import LoadingState from '@/components/LoadingState';
 import type { AdminBackupImportResponse, AdminBackupRunResponse, AdminBackupSettings, RemoteBackupBrowserResponse } from '@/lib/api/backup';
@@ -10,12 +10,14 @@ import type { CiphersImportPayload } from '@/lib/api/vault';
 import { t } from '@/lib/i18n';
 import type { AccountPasskeyCredential, AdminInvite, AdminUser, AuditLogListResult, AuditLogSettings, AuthRequest, AuthorizedDevice, Cipher, CustomEquivalentDomain, DomainRules, DynamicCardSchema, Folder as VaultFolder, Profile, Send, SendDraft, SessionState, VaultDraft } from '@/lib/types';
 import type { ExportRequest } from '@/lib/export-formats';
+import type { AuthedFetch } from '@/lib/api/shared';
 
 const VaultPage = lazy(() => import('@/components/VaultPage'));
 const SendsPage = lazy(() => import('@/components/SendsPage'));
 const TotpCodesPage = lazy(() => import('@/components/TotpCodesPage'));
 const SettingsPage = lazy(() => import('@/components/SettingsPage'));
 const DomainRulesPage = lazy(() => import('@/components/DomainRulesPage'));
+const AIProvidersPage = lazy(() => import('@/components/AIProvidersPage'));
 const SecurityDevicesPage = lazy(() => import('@/components/SecurityDevicesPage'));
 const AdminPage = lazy(() => import('@/components/AdminPage'));
 const LogCenterPage = lazy(() => import('@/components/LogCenterPage'));
@@ -37,6 +39,7 @@ export interface AppMainRoutesProps {
   profile: Profile | null;
   profileLoading: boolean;
   session: SessionState | null;
+  authedFetch: AuthedFetch;
   mobileLayout: boolean;
   mobileSidebarToggleKey: number;
   importRoute: string;
@@ -305,6 +308,10 @@ export default function AppMainRoutes(props: AppMainRoutesProps) {
                 <Shield size={18} />
                 <span>{t('nav_device_management')}</span>
               </Link>
+              <Link href="/settings/ai-providers" className="mobile-settings-link">
+                <Sparkles size={18} />
+                <span>{t('txt_ai_providers_title')}</span>
+              </Link>
               <Link href="/settings/domain-rules" className="mobile-settings-link">
                 <Globe2 size={18} />
                 <span>{t('nav_domain_rules')}</span>
@@ -393,6 +400,21 @@ export default function AppMainRoutes(props: AppMainRoutesProps) {
               onSave={props.onSaveDomainRules}
               onNotify={props.onNotify}
             />
+          </Suspense>
+        </div>
+      </Route>
+      <Route path="/settings/ai-providers">
+        <div className="stack">
+          {props.mobileLayout && (
+            <div className="mobile-settings-subhead">
+              <button type="button" className="btn btn-secondary small mobile-settings-back" onClick={() => props.onNavigate(props.settingsHomeRoute)}>
+                <span className="btn-icon" aria-hidden="true">{"<"}</span>
+                {t('txt_back')}
+              </button>
+            </div>
+          )}
+          <Suspense fallback={<RouteContentFallback />}>
+            <AIProvidersPage authedFetch={props.authedFetch} />
           </Suspense>
         </div>
       </Route>

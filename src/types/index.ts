@@ -300,6 +300,20 @@ export interface Device {
 
 export type AccountPasskeyPrfStatus = 0 | 1 | 2;
 
+export interface AIProvider {
+  id: string;
+  userId: string;
+  name: string;
+  providerType: string;
+  modelName: string;
+  baseUrl: string | null;
+  isDefault: boolean;
+  isActive: boolean;
+  apiKeyEnc: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AccountPasskeyCredential {
   id: string;
   userId: string;

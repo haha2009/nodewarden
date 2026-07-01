@@ -56,9 +56,8 @@ async function maybeServeAsset(request: Request, env: Env): Promise<Response | n
   if (request.method !== 'GET' && request.method !== 'HEAD') return null;
   const url = new URL(request.url);
   if (isWorkerHandledPath(url.pathname)) return null;
-  // Let wrangler handle static assets directly — skip Worker interception
-  if (url.pathname.startsWith('/assets/')) return null;
 
+  // For static assets, let the Worker fetch them from the ASSETS binding.
   const response = await env.ASSETS.fetch(request);
   return addSearchIndexHeaders(request, response);
 }

@@ -117,6 +117,7 @@ const APP_ROUTE_PATHS = [
   '/settings',
   SETTINGS_ACCOUNT_ROUTE,
   SETTINGS_DOMAIN_RULES_ROUTE,
+  '/settings/ai-providers',
   '/help',
   ...IMPORT_ROUTE_PATHS,
 ] as const;
@@ -1568,6 +1569,7 @@ export default function App() {
     if (location === '/admin') return t('nav_admin_panel');
     if (location === '/logs') return t('nav_log_center');
     if (location === LEGACY_DEVICE_MANAGEMENT_ROUTE || location === DEVICE_MANAGEMENT_ROUTE) return t('nav_device_management');
+    if (location === '/settings/ai-providers') return t('txt_ai_providers_title');
     if (location === SETTINGS_DOMAIN_RULES_ROUTE) return t('nav_domain_rules');
     if (location === '/backup') return t('nav_backup_strategy');
     if (isImportRoute) return t('nav_import_export');
@@ -1618,6 +1620,7 @@ export default function App() {
     profile,
     profileLoading: profileQuery.isFetching && !profile,
     session,
+    authedFetch,
     mobileLayout,
     mobileSidebarToggleKey,
     importRoute: IMPORT_ROUTE,

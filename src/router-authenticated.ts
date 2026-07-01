@@ -90,6 +90,14 @@ import {
   handleValidateDynamicSchema,
 } from './handlers/dynamic-cards';
 import { handleGetCardTemplates } from './handlers/card-config';
+import { handleFetchMeta } from './handlers/fetch-meta';
+import {
+  handleGetAIProviders,
+  handleCreateAIProvider,
+  handleUpdateAIProvider,
+  handleDeleteAIProvider,
+  handleTestAIProvider,
+} from './handlers/ai-providers';
 
 export async function handleAuthenticatedRoute(
   request: Request,
@@ -388,6 +396,23 @@ export async function handleAuthenticatedRoute(
 
   if (path === '/api/settings/card-templates' && method === 'GET') {
     return handleGetCardTemplates(env);
+  }
+
+  if (path === '/api/settings/fetch-meta' && method === 'POST') {
+    return handleFetchMeta(request, env, userId);
+  }
+
+  if (path.startsWith('/api/settings/ai-providers')) {
+    if (method === 'GET') return handleGetAIProviders(env, userId);
+    if (path.startsWith('/api/settings/ai-providers/')) {
+      const parts = path.split('/');
+      const aiId = parts[4] || '';
+      if (path.endsWith('/test') && method === 'POST') return handleTestAIProvider(request, env, userId, aiId);
+      if (method === 'PUT') return handleUpdateAIProvider(request, env, userId, aiId);
+      if (method === 'DELETE') return handleDeleteAIProvider(request, env, userId, aiId);
+    }
+    if (method === 'POST') return handleCreateAIProvider(request, env, userId);
+    return null;
   }
 
   const authenticatedDeviceResponse = await handleAuthenticatedDeviceRoute(request, env, userId, path, method);
