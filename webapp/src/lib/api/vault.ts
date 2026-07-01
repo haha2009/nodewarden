@@ -589,6 +589,7 @@ function draftFromDecryptedCipher(cipher: Cipher): VaultDraft {
     const decThirdPartyPlatform = (cipher.login as Record<string, string>).decThirdPartyPlatform || '';
     draft.thirdPartyPlatform = decThirdPartyPlatform;
     draft.thirdPartyAccount = (cipher.login as Record<string, string>).decThirdPartyAccount || '';
+    draft.phoneNumber = (cipher.login as Record<string, string>).decPhoneNumber || '';
     draft.loginType = (decLoginType === 'sms_code' || decLoginType === 'qr_scan' || decLoginType === 'third_party') ? decLoginType : (!!decThirdPartyPlatform ? 'third_party' : 'password');
     draft.loginFido2Credentials = Array.isArray(cipher.login.fido2Credentials)
       ? cipher.login.fido2Credentials.filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
@@ -1185,6 +1186,7 @@ async function buildCipherPayload(
       loginType: await encryptTextValue(draft.loginType, keys.enc, keys.mac),
       thirdPartyPlatform: await encryptTextValue(draft.thirdPartyPlatform, keys.enc, keys.mac),
       thirdPartyAccount: await encryptTextValue(draft.thirdPartyAccount, keys.enc, keys.mac),
+      phoneNumber: await encryptTextValue(draft.phoneNumber, keys.enc, keys.mac),
       passwordRevisionDate: passwordChanged ? now : existingLogin.passwordRevisionDate ?? null,
       fido2Credentials: await normalizeFido2Credentials(existingFido2, keys.enc, keys.mac),
       uris: await encryptUris(draft.loginUris || [], keys.enc, keys.mac),

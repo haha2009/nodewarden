@@ -656,6 +656,7 @@ export function draftFromCipher(cipher: Cipher): VaultDraft {
     const decThirdPartyPlatform = (cipher.login as Record<string, string>).decThirdPartyPlatform || '';
     draft.thirdPartyPlatform = decThirdPartyPlatform;
     draft.thirdPartyAccount = (cipher.login as Record<string, string>).decThirdPartyAccount || '';
+    draft.phoneNumber = (cipher.login as Record<string, string>).decPhoneNumber || '';
     draft.loginType = (decLoginType === 'sms_code' || decLoginType === 'qr_scan' || decLoginType === 'third_party') ? decLoginType : (!!decThirdPartyPlatform ? 'third_party' : 'password');
     if (!draft.loginUris.length) draft.loginUris = [createEmptyLoginUri()];
   }
@@ -703,7 +704,7 @@ export function draftFromCipher(cipher: Cipher): VaultDraft {
 
   // Auto-create default group from existing login data
   if (cipher.login) {
-    const hasLoginData = cipher.login.decUsername || cipher.login.decPassword || cipher.login.decTotp
+    const hasLoginData = cipher.login.decUsername || cipher.login.decPassword || cipher.login.decTotp || cipher.login.decPhoneNumber
       || (cipher.login as Record<string, string>).decThirdPartyPlatform;
     if (hasLoginData) {
       const defaultLogin = createEmptyGroupLogin();
