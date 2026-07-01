@@ -1,6 +1,6 @@
 export type NetworkStatus = 'online' | 'offline';
 
-const STATUS_PROBE_TIMEOUT_MS = 8000;
+const STATUS_PROBE_TIMEOUT_MS = 30000;
 const STATUS_PROBE_CACHE_MS = 5000;
 const PROBE_FAILURES_BEFORE_OFFLINE = 2;
 const listeners = new Set<(status: NetworkStatus) => void>();

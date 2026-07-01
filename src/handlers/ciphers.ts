@@ -205,6 +205,8 @@ export function normalizeCipherLoginForCompatibility(
     loginType: 1000,
     thirdPartyPlatform: 1000,
     thirdPartyAccount: 1000,
+    descriptionZh: 1000,
+    descriptionEn: 1000,
   });
   if (!next) return null;
   next.uris = normalizeCipherLoginUrisForCompatibility(next.uris, {
@@ -269,6 +271,8 @@ export function validateCipherEncryptedFieldsForCompatibility(cipher: Cipher): s
     if (login.loginType != null && !optionalEncStringWithin(login.loginType, 1000)) return 'Login type must be an encrypted string up to 1000 characters.';
     if (login.thirdPartyPlatform != null && !optionalEncStringWithin(login.thirdPartyPlatform, 1000)) return 'Third-party platform must be an encrypted string up to 1000 characters.';
     if (login.thirdPartyAccount != null && !optionalEncStringWithin(login.thirdPartyAccount, 1000)) return 'Third-party account must be an encrypted string up to 1000 characters.';
+    if (login.descriptionZh != null && !optionalEncStringWithin(login.descriptionZh, 1000)) return 'Description must be an encrypted string up to 1000 characters.';
+    if (login.descriptionEn != null && !optionalEncStringWithin(login.descriptionEn, 1000)) return 'Description must be an encrypted string up to 1000 characters.';
 
     if (Array.isArray(login.uris)) {
       for (const uri of login.uris) {
